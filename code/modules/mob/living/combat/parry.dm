@@ -1,3 +1,5 @@
+#define STAM_DRAIN_PER_STR_DIFF_HEAVY_BAL -2
+
 /mob/living/proc/attempt_parry(datum/intent/intenty, mob/living/user)
 	var/prob2defend = user.defprob
 	var/mob/living/H = src
@@ -64,12 +66,14 @@
 
 	var/defender_skill = 0
 	var/attacker_skill = 0
+	var/obj/item/clothing/wrists/roguetown/bracers/unarmed_bracers
 
 	if(highest_defense <= (H.get_skill_level(/datum/skill/combat/unarmed) * 20))
 		defender_skill = H.get_skill_level(/datum/skill/combat/unarmed)
 		var/obj/B = H.get_item_by_slot(SLOT_WRISTS)
 		if(istype(B, /obj/item/clothing/wrists/roguetown/bracers))
-			prob2defend += (defender_skill * 30)
+			prob2defend += (defender_skill * 35)
+			unarmed_bracers = B
 		else
 			prob2defend += (defender_skill * 10)		// no bracers gonna be butts.
 		weapon_parry = FALSE
@@ -177,8 +181,8 @@
 
 	if(parry_status)
 		if(intenty.masteritem)
-			if(intenty.masteritem.wbalance < 0 && user.STASTR > src.STASTR) //enemy weapon is heavy, so get a bonus scaling on strdiff
-				drained = drained + ( intenty.masteritem.wbalance * ((user.STASTR - src.STASTR) * -5) )
+			if(intenty.masteritem.wbalance < WBALANCE_NORMAL && user.STASTR > src.STASTR) //enemy weapon is heavy, so get a bonus scaling on strdiff
+				drained = drained + ( intenty.masteritem.wbalance * ((user.STASTR - src.STASTR) * STAM_DRAIN_PER_STR_DIFF_HEAVY_BAL) )
 	else
 		to_chat(src, span_warning("The enemy defeated my parry!"))
 		if(HAS_TRAIT(src, TRAIT_MAGEARMOR))
@@ -201,35 +205,37 @@
 	if(istype(user.rmb_intent, /datum/rmb_intent/weak))
 		exp_multi = exp_multi/2
 
+	var/obj/item/AB = intenty.masteritem
+	var/attacker_skill_type
+
+	if(AB)
+		attacker_skill_type = AB.associated_skill
+	else
+		attacker_skill_type = /datum/skill/combat/unarmed
+
 	if(weapon_parry == TRUE)
 		if(do_parry(used_weapon, drained, user)) //show message
-			if ((mobility_flags & MOBILITY_STAND))
-				var/skill_target = attacker_skill
-				if(!HAS_TRAIT(U, TRAIT_GOODTRAINER))
-					skill_target -= SKILL_LEVEL_NOVICE
-				if(HAS_TRAIT(U, TRAIT_BADTRAINER))
-					skill_target -= SKILL_LEVEL_NOVICE
-				if (can_train_combat_skill(src, used_weapon.associated_skill, skill_target) && ispath(used_weapon.associated_skill, /datum/skill/combat))
-					mind.add_sleep_experience(used_weapon.associated_skill, max(round(STAINT*exp_multi), 0), FALSE)
-
-			var/obj/item/AB = intenty.masteritem
-
-			//attacker skill gain
-
-			if(U.mind)
-				var/attacker_skill_type
-				if(AB)
-					attacker_skill_type = AB.associated_skill
-				else
-					attacker_skill_type = /datum/skill/combat/unarmed
+			//only gain experience if attacker and defender aren't using non-combat skills for their weapons
+			if(ispath(attacker_skill_type, /datum/skill/combat) && ispath(used_weapon.associated_skill, /datum/skill/combat))
 				if ((mobility_flags & MOBILITY_STAND))
-					var/skill_target = defender_skill
-					if(!HAS_TRAIT(src, TRAIT_GOODTRAINER))
+					var/skill_target = attacker_skill
+					if(!HAS_TRAIT(U, TRAIT_GOODTRAINER))
 						skill_target -= SKILL_LEVEL_NOVICE
 					if(HAS_TRAIT(U, TRAIT_BADTRAINER))
 						skill_target -= SKILL_LEVEL_NOVICE
-					if (can_train_combat_skill(U, attacker_skill_type, skill_target) && ispath(attacker_skill_type, /datum/skill/combat))
-						U.mind.add_sleep_experience(attacker_skill_type, max(round(STAINT*exp_multi), 0), FALSE)
+					if (can_train_combat_skill(src, used_weapon.associated_skill, skill_target))
+						mind.add_sleep_experience(used_weapon.associated_skill, max(round(STAINT*exp_multi), 0), FALSE)
+
+				//attacker skill gain
+				if(U.mind)
+					if ((mobility_flags & MOBILITY_STAND))
+						var/skill_target = defender_skill
+						if(!HAS_TRAIT(src, TRAIT_GOODTRAINER))
+							skill_target -= SKILL_LEVEL_NOVICE
+						if(HAS_TRAIT(U, TRAIT_BADTRAINER))
+							skill_target -= SKILL_LEVEL_NOVICE
+						if (can_train_combat_skill(U, attacker_skill_type, skill_target))
+							U.mind.add_sleep_experience(attacker_skill_type, max(round(STAINT*exp_multi), 0), FALSE)
 
 			if(prob(66) && AB)
 				if((used_weapon.flags_1 & CONDUCT_1) && (AB.flags_1 & CONDUCT_1))
@@ -291,14 +297,27 @@
 
 	if(weapon_parry == FALSE)
 		if(do_unarmed_parry(drained, user))
-			if((mobility_flags & MOBILITY_STAND))
-				var/skill_target = attacker_skill
-				if(!HAS_TRAIT(U, TRAIT_GOODTRAINER))
-					skill_target -= SKILL_LEVEL_NOVICE
-				if(HAS_TRAIT(U, TRAIT_BADTRAINER))
-					skill_target -= SKILL_LEVEL_NOVICE
-				if(can_train_combat_skill(H, /datum/skill/combat/unarmed, skill_target))
-					H.mind?.add_sleep_experience(/datum/skill/combat/unarmed, max(round(STAINT*exp_multi), 0), FALSE)
+			//only gain experience if attacker isn't using a non-combat skill for their weapon
+			if(ispath(attacker_skill_type, /datum/skill/combat))
+				if((mobility_flags & MOBILITY_STAND))
+					var/skill_target = attacker_skill
+					if(!HAS_TRAIT(U, TRAIT_GOODTRAINER))
+						skill_target -= SKILL_LEVEL_NOVICE
+					if(HAS_TRAIT(U, TRAIT_BADTRAINER))
+						skill_target -= SKILL_LEVEL_NOVICE
+					if(can_train_combat_skill(H, /datum/skill/combat/unarmed, skill_target))
+						H.mind?.add_sleep_experience(/datum/skill/combat/unarmed, max(round(STAINT*exp_multi), 0), FALSE)
+
+			if(unarmed_bracers)
+				var/bracer_damage
+				var/d_flag = "blunt"
+				if(intenty.masteritem)
+					bracer_damage = get_complex_damage(intenty.masteritem, user)
+					d_flag = intenty.item_d_type
+				else
+					bracer_damage = U.get_punch_dmg()
+				bracer_damage = bracer_damage / 2
+				unarmed_bracers.take_damage(bracer_damage, damage_flag = d_flag, armor_penetration = 100)
 			flash_fullscreen("blackflash2")
 			return TRUE
 		else
