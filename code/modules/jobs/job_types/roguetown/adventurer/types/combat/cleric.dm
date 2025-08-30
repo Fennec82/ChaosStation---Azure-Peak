@@ -48,7 +48,7 @@
 				/obj/item/recipe_book/survival = 1,
 				)
 			var/datum/devotion/C = new /datum/devotion(H, H.patron)
-			C.grant_miracles(H, cleric_tier = CLERIC_T1, passive_gain = FALSE, devotion_limit = CLERIC_REQ_1)	//Capped to T1 miracles.
+			C.grant_miracles(H, cleric_tier = CLERIC_T1, passive_gain = CLERIC_REGEN_WEAK, devotion_limit = CLERIC_REQ_1)	//Capped to T1 miracles.
 			H.adjust_skillrank(/datum/skill/combat/wrestling, 4, TRUE)
 			H.adjust_skillrank(/datum/skill/combat/unarmed, 4, TRUE)
 			H.adjust_skillrank(/datum/skill/misc/swimming, 3, TRUE)
@@ -134,7 +134,13 @@
 				if(/datum/patron/old_god)
 					armor = /obj/item/clothing/suit/roguetown/armor/plate/half/fluted/ornate
 					cloak = /obj/item/clothing/cloak/psydontabard
-					head = /obj/item/clothing/head/roguetown/helmet/heavy/psydonhelm
+					var/helmets = list("Armet","Bucket Helm")
+					var/helmet_choice = input("Choose your Psydonian Helm", "WALK IN HIS LIGHT") as anything in helmets
+					switch(helmet_choice)
+						if("Bucket Helm")
+							head = /obj/item/clothing/head/roguetown/helmet/heavy/psybucket
+						if("Armet")
+							head = /obj/item/clothing/head/roguetown/helmet/heavy/psydonhelm
 				if(/datum/patron/divine/astrata)
 					cloak = /obj/item/clothing/cloak/templar/astrata
 					head = /obj/item/clothing/head/roguetown/helmet/heavy/astratan
@@ -170,12 +176,12 @@
 					head = /obj/item/clothing/head/roguetown/helmet/heavy/bucket
 			H.dna.species.soundpack_m = new /datum/voicepack/male/knight()
 			var/datum/devotion/C = new /datum/devotion(H, H.patron)
-			C.grant_miracles(H, cleric_tier = CLERIC_T1, passive_gain = FALSE, devotion_limit = CLERIC_REQ_1)	//Capped to T1 miracles.
+			C.grant_miracles(H, cleric_tier = CLERIC_T1, passive_gain = CLERIC_REGEN_WEAK, devotion_limit = CLERIC_REQ_1)	//Capped to T1 miracles.
 			var/weapons = list("Longsword","Mace","Flail")
 			var/weapon_choice = input("Choose your weapon.", "TAKE UP ARMS") as anything in weapons
 			switch(weapon_choice)
 				if("Longsword")
-					if(HAS_TRAIT(H, TRAIT_PSYDONITE))
+					if(HAS_TRAIT(H, TRAIT_PSYDONIAN_GRIT))
 						beltr = /obj/item/rogueweapon/sword/long/oldpsysword
 					else
 						beltr = /obj/item/rogueweapon/sword/long
@@ -183,7 +189,10 @@
 					H.adjust_skillrank(/datum/skill/combat/swords, 1, TRUE)
 				if("Mace")
 					H.adjust_skillrank(/datum/skill/combat/maces, 1, TRUE)
-					beltr = /obj/item/rogueweapon/mace
+					if(HAS_TRAIT(H, TRAIT_PSYDONIAN_GRIT))
+						beltr = /obj/item/rogueweapon/mace/cudgel/psy/old
+					else
+						beltr = /obj/item/rogueweapon/mace
 				if("Flail")
 					H.adjust_skillrank(/datum/skill/combat/whipsflails, 1, TRUE)
 					beltr = /obj/item/rogueweapon/flail
@@ -207,7 +216,7 @@
 			beltr = /obj/item/rogueweapon/huntingknife/idagger/steel/special
 			beltl = /obj/item/storage/belt/rogue/pouch/coins/poor
 			var/datum/devotion/C = new /datum/devotion(H, H.patron)
-			C.grant_miracles(H, cleric_tier = CLERIC_T2, passive_gain = FALSE, devotion_limit = CLERIC_REQ_2)	//Capped to T2 miracles.
+			C.grant_miracles(H, cleric_tier = CLERIC_T2, passive_gain = CLERIC_REGEN_DEVOTEE, devotion_limit = CLERIC_REQ_2)	//Capped to T2 miracles.
 			backpack_contents = list(
 				/obj/item/flashlight/flare/torch = 1,
 				/obj/item/recipe_book/survival = 1,
@@ -340,9 +349,16 @@
 					head = /obj/item/clothing/head/roguetown/roguehood
 			var/datum/devotion/C = new /datum/devotion(H, H.patron)
 			C.grant_miracles(H, cleric_tier = CLERIC_T1, passive_gain = CLERIC_REGEN_MINOR, devotion_limit = CLERIC_REQ_3)	//Minor regen, capped to T3.
+			if(istype(H.patron, /datum/patron/divine))
+				// For now, only Tennites get this. Heretics can have a special treat later
+				H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/projectile/divineblast)
+			if(istype(H.patron, /datum/patron/inhumen))
+				H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/projectile/divineblast/unholyblast)
 	switch(H.patron?.type)
 		if(/datum/patron/old_god)
 			neck = /obj/item/clothing/neck/roguetown/psicross
+		if(/datum/patron/divine/undivided)
+			neck = /obj/item/clothing/neck/roguetown/psicross/undivided
 		if(/datum/patron/divine/astrata)
 			neck = /obj/item/clothing/neck/roguetown/psicross/astrata
 			H.cmode_music = 'sound/music/cmode/church/combat_astrata.ogg'
