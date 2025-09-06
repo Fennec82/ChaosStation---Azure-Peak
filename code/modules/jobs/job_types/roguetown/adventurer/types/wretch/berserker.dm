@@ -5,8 +5,16 @@
 	allowed_races = RACES_ALL_KINDS
 	outfit = /datum/outfit/job/roguetown/wretch/berserker
 	category_tags = list(CTAG_WRETCH)
-	traits_applied = list(TRAIT_STEELHEARTED, TRAIT_OUTLANDER, TRAIT_STRONGBITE, TRAIT_CRITICAL_RESISTANCE, TRAIT_NOPAINSTUN, TRAIT_OUTLAW, TRAIT_HERESIARCH)
-
+	traits_applied = list(TRAIT_STRONGBITE, TRAIT_CRITICAL_RESISTANCE, TRAIT_NOPAINSTUN)
+	// Literally same stat spread as Atgervi Shaman
+	subclass_stats = list(
+		STATKEY_STR = 3,
+		STATKEY_CON = 2,
+		STATKEY_WIL = 1,
+		STATKEY_SPD = 1,
+		STATKEY_INT = -1,
+		STATKEY_PER = -1
+	)
 
 /datum/outfit/job/roguetown/wretch/berserker/pre_equip(mob/living/carbon/human/H)
 	head = /obj/item/clothing/head/roguetown/helmet/kettle
@@ -25,13 +33,14 @@
 		/obj/item/flashlight/flare/torch/lantern/prelit = 1,
 		/obj/item/storage/belt/rogue/pouch/coins/poor = 1,
 		/obj/item/rope/chain = 1,
-		/obj/item/rogueweapon/scabbard/sheath = 1
+		/obj/item/rogueweapon/scabbard/sheath = 1,
+		/obj/item/reagent_containers/glass/bottle/alchemical/healthpot = 1,	//Small health vial
 		)
 	H.adjust_skillrank(/datum/skill/combat/maces, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/combat/swords, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/combat/axes, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/combat/wrestling, 4, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/unarmed, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/unarmed, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
 	H.adjust_skillrank(/datum/skill/misc/athletics, 4, TRUE)
 	H.adjust_skillrank(/datum/skill/misc/climbing, 4, TRUE)
@@ -48,16 +57,16 @@
 	H.set_blindness(0)
 	switch(weapon_choice)
 		if ("Katar")
-			H.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
+			H.adjust_skillrank_up_to(/datum/skill/combat/unarmed, 5, TRUE)
 			beltr = /obj/item/rogueweapon/katar
 		if ("Steel Knuckles")
-			H.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
+			H.adjust_skillrank_up_to(/datum/skill/combat/unarmed, 5, TRUE)
 			beltr = /obj/item/rogueweapon/knuckles
 		if ("Punch Dagger")
-			H.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
+			H.adjust_skillrank_up_to(/datum/skill/combat/unarmed, 5, TRUE)
 			beltr = /obj/item/rogueweapon/katar/punchdagger
 		if ("MY BARE HANDS!!!")
-			H.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
+			H.adjust_skillrank_up_to(/datum/skill/combat/unarmed, 5, TRUE)
 			ADD_TRAIT(H, TRAIT_CIVILIZEDBARBARIAN, TRAIT_GENERIC)
 		if ("Battle Axe")
 			H.adjust_skillrank(/datum/skill/combat/axes, 1, TRUE)
@@ -69,10 +78,4 @@
 			H.adjust_skillrank(/datum/skill/combat/swords, 1, TRUE)
 			beltr = /obj/item/rogueweapon/scabbard/sword
 			r_hand = /obj/item/rogueweapon/sword/falx
-	H.change_stat("strength", 3) // Literally same stat spread as Atgervi Shaman
-	H.change_stat("endurance", 1)
-	H.change_stat("constitution", 2)
-	H.change_stat("intelligence", -1)
-	H.change_stat("perception", -1)
-	H.change_stat("speed", 1)
 	wretch_select_bounty(H)

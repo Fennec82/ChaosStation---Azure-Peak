@@ -258,7 +258,7 @@
 	. = ..()
 	if(. && iscarbon(user))
 		var/mob/living/carbon/L = user
-		if(L.get_complex_pain() > (L.STACON * 9))
+		if(L.get_complex_pain() > (L.STAWIL * 9))
 			L.setDir(2)
 			L.SetUnconscious(200)
 		else
@@ -1773,3 +1773,18 @@
 	set category = "Emotes"
 
 	emote("ffsalute", intentional =  TRUE)
+
+/datum/emote/living/yip
+	key = "yip"
+	key_third_person = "yips"
+	message = "yips!"
+	emote_type = EMOTE_AUDIBLE
+	message_muffled = "makes a muffled yip!"
+	is_animal = TRUE
+	show_runechat = FALSE
+
+/mob/living/carbon/human/verb/yip()
+	set name = "Yip"
+	set category = "Noises"
+
+	emote("yip", intentional = TRUE)

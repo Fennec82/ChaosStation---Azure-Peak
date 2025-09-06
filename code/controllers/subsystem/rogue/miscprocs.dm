@@ -13,6 +13,7 @@
 #define CLERIC_REQ_4 1000
 
 #define CLERIC_REGEN_DEVOTEE 0.3
+#define CLERIC_REGEN_WEAK 0.1 //Would be better to just do away with devotion entirely, but oh well.
 #define CLERIC_REGEN_MINOR 0.5
 #define CLERIC_REGEN_MAJOR 0.8
 #define CLERIC_REGEN_ABSOLVER 5
@@ -105,21 +106,29 @@
 	return TRUE
 
 /datum/devotion/proc/try_add_spells(silent = FALSE)
-	if(length(patron.miracles))
-		for(var/spell_type in patron.miracles)
-			if(patron.miracles[spell_type] <= level)
-				if(holder.mind.has_spell(spell_type))
-					continue
-				else
-					var/newspell = new spell_type
+	if(!holder || !holder.mind)
+		return
+
+	if(patron)
+		if(length(patron.miracles))
+			for(var/spell_type in patron.miracles)
+				var/required_tier = patron.miracles[spell_type]			
+				if(required_tier <= level)
+					if(holder.mind.has_spell(spell_type))
+						continue
+
+					var/obj/effect/proc_holder/spell/newspell = new spell_type
 					if(!silent)
 						to_chat(holder, span_boldnotice("I have unlocked a new spell: [newspell]"))
 					holder.mind.AddSpell(newspell)
 					LAZYADD(granted_spells, newspell)
-	if(length(patron.traits_tier))
-		for(var/trait in patron.traits_tier)
-			if(patron.traits_tier[trait] <= level)
-				ADD_TRAIT(holder, trait, TRAIT_MIRACLE)
+		if(length(patron.traits_tier))
+			for(var/trait in patron.traits_tier)
+				var/required_tier = patron.traits_tier[trait]
+				if(required_tier <= level)
+					if(!silent)
+						to_chat(holder, span_boldnotice("I have unlocked a new trait: [trait]"))
+					ADD_TRAIT(holder, trait, TRAIT_MIRACLE)
 
 
 //The main proc that distributes all the needed devotion tweaks to the given class.
@@ -232,22 +241,12 @@
 	else
 		remove_client_colour(/datum/client_colour/monochrome)
 
-/datum/devotion/proc/excommunicate(mob/living/carbon/human/H)
-    if (!devotion)
-        return
+/mob/living/carbon/human/proc/togglecombatawareness()
+	set name = "Toggle Combat Awareness"
+	set category = "Virtue"
 
-    prayer_effectiveness = 0
-    devotion = 0
-    passive_devotion_gain = 0
-    passive_progression_gain = 0
-    STOP_PROCESSING(SSobj, src)
-    to_chat(H, span_boldnotice("I have been excommunicated. I am now unable to gain devotion."))
-
-/datum/devotion/proc/recommunicate(mob/living/carbon/human/H)
-    prayer_effectiveness = 2
-    if (!passive_devotion_gain && !passive_progression_gain)
-        passive_devotion_gain = CLERIC_REGEN_DEVOTEE
-        passive_progression_gain = CLERIC_REGEN_DEVOTEE
-        START_PROCESSING(SSobj, src)
-
-    to_chat(H, span_boldnotice("I have been welcomed back to the Church. I am now able to gain devotion again."))
+	if(HAS_TRAIT(src, TRAIT_COMBAT_AWARE))
+		REMOVE_TRAIT(src, TRAIT_COMBAT_AWARE, TRAIT_VIRTUE) 
+	else
+		ADD_TRAIT(src, TRAIT_COMBAT_AWARE, TRAIT_VIRTUE)
+	to_chat(src, "I will see [HAS_TRAIT(src, TRAIT_COMBAT_AWARE) ? "more" : "less"] combat information now.")

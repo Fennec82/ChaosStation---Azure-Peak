@@ -431,6 +431,29 @@
 			return FALSE
 	return TRUE
 
+/datum/crafting_recipe/roguetown/structure/bordercorner
+	name = "border corner"
+	result = /obj/structure/fluff/railing/corner
+	reqs = list(/obj/item/grown/log/tree/small = 1)
+	ontile = TRUE
+	verbage_simple = "construct"
+	verbage = "constructs"
+	skillcraft = /datum/skill/craft/carpentry
+	buildsame = TRUE
+	diagonal = TRUE
+	craftdiff = 1
+
+/datum/crafting_recipe/roguetown/structure/border
+	name = "border"
+	result = /obj/structure/fluff/railing/border
+	reqs = list(/obj/item/grown/log/tree/small = 1)
+	ontile = TRUE
+	verbage_simple = "construct"
+	verbage = "constructs"
+	skillcraft = /datum/skill/craft/carpentry
+	buildsame = TRUE
+	craftdiff = 1
+
 /datum/crafting_recipe/roguetown/structure/railing
 	name = "railing"
 	result = /obj/structure/fluff/railing/wood
@@ -850,6 +873,10 @@
 	if(!istype(to_check, /turf/open/floor/rogue/dirt))
 		to_chat(user, span_info("I need a dirt floor to do this."))
 		return FALSE
+	for(var/obj/O in T.contents)
+		if(istype(O, /obj/structure/spike_pit))
+			to_chat(user, span_info("There's already a pit of spikes here."))
+			return FALSE
 	return TRUE
 
 /datum/crafting_recipe/roguetown/structure/wicker
