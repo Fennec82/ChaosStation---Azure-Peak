@@ -18,7 +18,7 @@
 	if(volume >= 60)
 		M.reagents.remove_reagent(/datum/reagent/medicine/healthpot, 2) //No overhealing.
 	if(M.blood_volume < BLOOD_VOLUME_NORMAL)
-		M.blood_volume = min(M.blood_volume+10, BLOOD_VOLUME_NORMAL)
+		M.blood_volume = min(M.blood_volume+15, BLOOD_VOLUME_NORMAL)
 	var/list/wCount = M.get_wounds()
 	if(wCount.len > 0)
 		M.heal_wounds(3) //at a motabalism of .5 U a tick this translates to 120WHP healing with 20 U Most wounds are unsewn 15-100. This is powerful on single wounds but rapidly weakens at multi wounds.
@@ -182,7 +182,7 @@
 	..()
 
 /datum/reagent/buff/strength
-	name = "Strength"
+	name = STATKEY_STR
 	color = "#ff9000"
 	taste_description = "old meat"
 
@@ -191,7 +191,7 @@
 	return ..()
 
 /datum/reagent/buff/perception
-	name = "Perception"
+	name = STATKEY_PER
 	color = "#ffff00"
 	taste_description = "cat piss"
 	metabolization_rate = REAGENTS_METABOLISM * 0.05
@@ -201,7 +201,7 @@
 	return ..()
 
 /datum/reagent/buff/intelligence
-	name = "Intelligence"
+	name = STATKEY_INT
 	color = "#438127"
 	taste_description = "bog water"
 	metabolization_rate = REAGENTS_METABOLISM * 0.05
@@ -211,7 +211,7 @@
 	return ..()
 
 /datum/reagent/buff/constitution
-	name = "Constitution"
+	name = STATKEY_CON
 	color = "#130604"
 	taste_description = "bile"
 
@@ -220,7 +220,7 @@
 	return ..()
 
 /datum/reagent/buff/endurance
-	name = "Endurance"
+	name = STATKEY_WIL
 	color = "#ffff00"
 	taste_description = "oversweetened milk"
 
@@ -229,7 +229,7 @@
 	return ..()
 
 /datum/reagent/buff/speed
-	name = "Speed"
+	name = STATKEY_SPD
 	color = "#ffff00"
 	taste_description = "raw egg yolk"
 
@@ -238,7 +238,7 @@
 	return ..()
 
 /datum/reagent/buff/fortune
-	name = "Fortune"
+	name = STATKEY_LCK
 	color = "#ffff00"
 	taste_description = "sour lemons"
 	metabolization_rate = REAGENTS_METABOLISM * 0.05
@@ -420,7 +420,7 @@ If you want to expand on poisons theres tons of fun effects TG chemistry has tha
 		M.add_nausea(9)
 		M.adjustFireLoss(2, 0)
 		M.adjust_fire_stacks(1)
-		M.IgniteMob()
+		M.ignite_mob()
 	return ..()
 //I'm stapling our infection reagents on the bottom, because IDEK where else to put them.
 

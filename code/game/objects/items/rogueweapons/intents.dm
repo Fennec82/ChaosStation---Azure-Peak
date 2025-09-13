@@ -75,7 +75,7 @@
 		QDEL_NULL(mob_light)
 	if(mob_charge_effect)
 		mastermob.vis_contents -= mob_charge_effect
-	if(mastermob.curplaying == src)
+	if(mastermob?.curplaying == src)
 		mastermob.curplaying = null
 	mastermob = null
 	masteritem = null
@@ -374,6 +374,7 @@
 	item_d_type = "stab"
 	blade_class = BCLASS_PICK
 	chargetime = 0
+	clickcd = 14 // Just like knife pick!
 	swingdelay = 12
 
 /datum/intent/pick/ranged
@@ -383,8 +384,8 @@
 	hitsound = list('sound/combat/hits/bladed/genstab (1).ogg', 'sound/combat/hits/bladed/genstab (2).ogg', 'sound/combat/hits/bladed/genstab (3).ogg')
 	penfactor = 60
 	damfactor = 1.1
-	chargetime = 0.7
-	chargedrain = 2
+	clickcd = CLICK_CD_CHARGED
+	releasedrain = 4
 	reach = 2
 	no_early_release = TRUE
 	blade_class = BCLASS_PICK
@@ -470,6 +471,8 @@
 	intent_intdamage_factor = 0.5
 
 /datum/intent/unarmed/punch/rmb_ranged(atom/target, mob/user)
+	if(user.stat >= UNCONSCIOUS)
+		return
 	if(ismob(target))
 		var/mob/M = target
 		var/list/targetl = list(target)
@@ -512,6 +515,8 @@
 	item_d_type = "blunt"
 
 /datum/intent/unarmed/shove/rmb_ranged(atom/target, mob/user)
+	if(user.stat >= UNCONSCIOUS)
+		return
 	if(ismob(target))
 		var/mob/M = target
 		var/list/targetl = list(target)
@@ -537,6 +542,8 @@
 	item_d_type = "blunt"
 
 /datum/intent/unarmed/grab/rmb_ranged(atom/target, mob/user)
+	if(user.stat >= UNCONSCIOUS)
+		return
 	if(ismob(target))
 		var/mob/M = target
 		var/list/targetl = list(target)
@@ -559,6 +566,8 @@
 	rmb_ranged = TRUE
 
 /datum/intent/unarmed/help/rmb_ranged(atom/target, mob/user)
+	if(user.stat >= UNCONSCIOUS)
+		return
 	if(ismob(target))
 		var/mob/M = target
 		var/list/targetl = list(target)

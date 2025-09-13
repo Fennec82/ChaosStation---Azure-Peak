@@ -26,7 +26,7 @@
 	var/datum/action/innate/crafting/button
 	var/display_craftable_only = TRUE
 	var/display_compact = TRUE
-
+	var/showonlycraftable = TRUE
 
 
 
@@ -170,6 +170,22 @@
 /datum/crafting_recipe/proc/TurfCheck(mob/user, turf/T)
 	return TRUE
 
+/atom/proc/SelectDiagDirection()
+	var/list/options = list("NORTHWEST", "SOUTHWEST", "SOUTHEAST", "NORTHEAST")
+	var/select = input(usr, "Please select a direction.", "", null) in options
+	if(!select)
+		return FALSE
+	switch(select)
+		if("NORTHWEST")
+			return NORTHWEST
+		if("SOUTHWEST")
+			return SOUTHWEST
+		if("SOUTHEAST")
+			return SOUTHEAST
+		if("NORTHEAST")
+			return NORTHEAST
+	return FALSE
+
 
 /datum/component/personal_crafting/proc/construct_item(mob/user, datum/crafting_recipe/R)
 	if (HAS_TRAIT(user, TRAIT_CURSE_MALUM))
@@ -276,7 +292,10 @@
 						else
 							var/atom/movable/I = new R.result (T)
 							I.CheckParts(parts, R)
-							I.OnCrafted(user.dir, user)
+							if(R.diagonal)
+								I.OnCrafted(I.SelectDiagDirection(), user)
+							else
+								I.OnCrafted(user.dir, user)
 							I.add_fingerprint(user)
 					user.visible_message(span_notice("[user] [R.verbage] \a [R.name]!"), \
 										span_notice("I [R.verbage_simple] \a [R.name]!"))
@@ -450,7 +469,7 @@
 	if(user == parent)
 		ui_interact(user)
 
-/datum/component/personal_crafting/ui_interact(mob/user, datum/tgui/ui)
+/*/datum/component/personal_crafting/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
 		cur_category = categories[1]
@@ -461,15 +480,11 @@
 			cur_subcategory = CAT_NONE
 		ui = new(user, src, "PersonalCrafting", "Crafting Menu", 700, 800)
 		ui.set_state(GLOB.not_incapacitated_turf_state)
-		ui.open()
+		ui.open()*/
 
 /datum/component/personal_crafting/ui_data(mob/user)
 	var/list/data = list()
 	data["busy"] = busy
-	data["category"] = cur_category
-	data["subcategory"] = cur_subcategory
-	data["display_craftable_only"] = display_craftable_only
-	data["display_compact"] = display_compact
 
 	var/list/surroundings = get_surroundings(user)
 	var/list/craftability = list()
@@ -479,12 +494,10 @@
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes)) //User doesn't actually know how to make this.
 			continue
 
-		if((R.category != cur_category) || (R.subcategory != cur_subcategory))
-			continue
-
-		craftability["[REF(R)]"] = check_contents(R, surroundings)
+		craftability[R.name] = check_contents(R, surroundings)
 
 	data["craftability"] = craftability
+	data["showonlycraftable"] = showonlycraftable
 	return data
 
 /datum/component/personal_crafting/ui_static_data(mob/user)
@@ -499,24 +512,38 @@
 
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes)) //User doesn't actually know how to make this.
 			continue
-
-		if(isnull(crafting_recipes[R.category]))
-			crafting_recipes[R.category] = list()
-
-		if(R.subcategory == CAT_NONE)
-			crafting_recipes[R.category] += list(build_recipe_data(R))
+		var/category
+		if(R.skillcraft)
+			var/datum/skill/S = new R.skillcraft()
+			category = S.name
 		else
-			if(isnull(crafting_recipes[R.category][R.subcategory]))
-				crafting_recipes[R.category][R.subcategory] = list()
-				crafting_recipes[R.category]["has_subcats"] = TRUE
-			crafting_recipes[R.category][R.subcategory] += list(build_recipe_data(R))
+			category = "Other"
+		if(isnull(crafting_recipes[category]))
+			crafting_recipes[category] = list()
+		crafting_recipes[category] += list(build_recipe_data(R))
 
 	data["crafting_recipes"] = crafting_recipes
 	return data
 
+/datum/component/personal_crafting/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
+	if(!ui)
+		ui = new(user, src, "MiaCraft", "Crafting Menu", 700, 800)
+		ui.set_state(GLOB.not_incapacitated_turf_state)
+		ui.open()
 
 /datum/component/personal_crafting/ui_act(action, params)
-	if(..())
+	. = ..()
+	switch(action)
+		if("craft")
+			var/path = text2path(params["item"])
+			var/recipe = new path
+			construct_item(usr, recipe)
+			usr.mind.lastrecipe = recipe
+		if("checkboxonlycraftable")
+			showonlycraftable = params["state"]
+	
+	/*if(..())
 		return
 	switch(action)
 		if("make")
@@ -543,12 +570,14 @@
 					cur_subcategory = ""
 				else
 					cur_subcategory = params["subcategory"]
-			. = TRUE
+			. = TRUE*/
 
 /datum/component/personal_crafting/proc/build_recipe_data(datum/crafting_recipe/R)
 	var/list/data = list()
 	data["name"] = R.name
 	data["ref"] = "[REF(R)]"
+	data["path"] = R.type
+	data["sellprice"] = R.sellprice
 	var/req_text = ""
 	var/tool_text = ""
 	var/catalyst_text = ""
@@ -576,6 +605,9 @@
 	tool_text = replacetext(tool_text,",","",-1)
 	data["tool_text"] = tool_text
 
+	data["craftingdifficulty"] = R.craftdiff
+
+
 	return data
 
 //Mind helpers
@@ -593,6 +625,7 @@
 // new crafting button interaction
 
 /datum/component/personal_crafting/proc/roguecraft(location, control, params, mob/user)
+
 	if(user.doing)
 		return
 	var/area/A = get_area(user)
@@ -642,3 +675,13 @@
 			if(r)
 				construct_item(user, r)
 				user.mind.lastrecipe = r
+
+
+/client/verb/toggle_legacycraft()
+	set name = "Toggle legacy craft"
+	set category = "Options"
+	set desc = "Toggles between legacy and miacraft"
+	usr.client.legacycraft = !legacycraft
+
+/client
+	var/legacycraft = FALSE

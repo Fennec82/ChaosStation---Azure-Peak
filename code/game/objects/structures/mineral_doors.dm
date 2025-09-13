@@ -552,7 +552,7 @@
 						message_admins("[H.real_name]([key_name(user)]) successfully lockpicked [src.name] & [locked ? "unlocked" : "locked"] it. [ADMIN_JMP(src)]")
 						log_admin("[H.real_name]([key_name(user)]) successfully lockpicked [src.name].")
 						record_featured_stat(FEATURED_STATS_CRIMINALS, user)
-						GLOB.azure_round_stats[STATS_LOCKS_PICKED]++
+						record_round_statistic(STATS_LOCKS_PICKED)
 						var/obj/effect/track/structure/new_track = new(get_turf(src))
 						new_track.handle_creation(user)
 					lock_toggle(user)
@@ -822,16 +822,6 @@
 	repair_cost_second = /obj/item/natural/stone
 	repair_skill = /datum/skill/craft/masonry
 
-/obj/structure/mineral_door/wood/donjon/stone/broken // no repair
-	icon_state = "stonebr"
-	base_state = "stone"
-	density = 0
-	opacity = 0
-	obj_integrity = 0
-	gc_destroyed = 1
-	brokenstate = 1
-	obj_broken = 1
-
 /obj/structure/mineral_door/wood/donjon/stone/attack_right(mob/user)
 	if(user.get_active_held_item())
 		..()
@@ -870,6 +860,21 @@
 		to_chat(user, span_info("I slide the viewport closed."))
 		opacity = TRUE
 		playsound(src, 'sound/foley/doors/windowup.ogg', 100, FALSE)
+
+/obj/structure/mineral_door/wood/donjon/stone/broken
+	desc = "A broken stone door from an era bygone. A new one must be constructed in its place."
+	icon_state = "stonebr"
+	base_state = "stone"
+	density = 0
+	opacity = 0
+	obj_integrity = 150
+	brokenstate = 1
+	obj_broken = 1
+	repairable = FALSE
+
+/obj/structure/mineral_door/wood/donjon/stone/broken/Initialize()
+	..()
+	icon_state = "stonebr" // Weird override otherwise
 
 
 /obj/structure/mineral_door/bars

@@ -20,6 +20,12 @@
 				/datum/reagent/medicine/manapot = 15)
 	craftdiff = 2
 
+/datum/crafting_recipe/roguetown/arcana/rawmana
+	name = "Crystalized Mana (15oz Mana Potion)"
+	result = /obj/item/magic/manacrystal
+	reqs = list(/datum/reagent/medicine/manapot = 45)
+	craftdiff = 2
+
 /datum/crafting_recipe/roguetown/arcana/chalk
 	name = "chalk (1 Cinnabar, 5oz Mana Potion)"
 	result = /obj/item/chalk
@@ -31,7 +37,7 @@
 	name = "infernal feather (1 Feather, 2 infernal ash)"
 	result = /obj/item/natural/feather/infernal
 	reqs = list(/obj/item/natural/feather = 1,
-				/obj/item/magic/infernalash = 2)
+				/obj/item/magic/infernal/ash = 2)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/sendingstone
@@ -112,15 +118,15 @@
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/bindingt4
-	name = "binding shackles (T4) - (1 T3 Binding Shackles, 1 Arcanic Meld)"
-	result = /obj/item/rope/chain/bindingshackles
+	name = "binding shackles (T4) - (1 T3 Binding Shackles, 1 Magical Confluence)"
+	result = /obj/item/rope/chain/bindingshackles/t4
 	reqs = list(/obj/item/rope/chain/bindingshackles/t3 = 1,
 				/obj/item/magic/melded/t4 = 1)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/bindingt5
-	name = "binding shackles (T5) - (1 T4 Binding Shackles, 1 Arcanic Meld)"
-	result = /obj/item/rope/chain/bindingshackles
+	name = "binding shackles (T5) - (1 T4 Binding Shackles, 1 Arcanic Aberation)"
+	result = /obj/item/rope/chain/bindingshackles/t5
 	reqs = list(/obj/item/rope/chain/bindingshackles/t4 = 1,
 				/obj/item/magic/melded/t5 = 1)
 	craftdiff = 2
@@ -129,7 +135,7 @@
 	name = "infernal forge - (1 Infernal Core, 4 Stones)"
 	req_table = FALSE
 	result = /obj/machinery/light/rogue/forge/arcane
-	reqs = list(/obj/item/magic/infernalcore = 1,
+	reqs = list(/obj/item/magic/infernal/core = 1,
 				/obj/item/natural/stone = 4)
 	craftdiff = 3
 
@@ -143,33 +149,33 @@
 /datum/crafting_recipe/roguetown/arcana/meldt1
 	name = "arcanic meld - (1 Infernal Ash, 1 Fairy Dust, 1 Elemental Mote)"
 	result = /obj/item/magic/melded/t1
-	reqs = list(/obj/item/magic/infernalash = 1,
+	reqs = list(/obj/item/magic/infernal/ash = 1,
 				/obj/item/magic/fairydust = 1,
-				/obj/item/magic/elementalmote = 1)
+				/obj/item/magic/elemental/mote = 1)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/meldt2
 	name = "dense arcanic meld - (1 Hellhound Fang, 1 Iridescent Scale, 1 Elemental Shard)"
 	result = /obj/item/magic/melded/t2
-	reqs = list(/obj/item/magic/hellhoundfang = 1,
+	reqs = list(/obj/item/magic/infernal/fang = 1,
 				/obj/item/magic/iridescentscale = 1,
-				/obj/item/magic/elementalshard = 1)
+				/obj/item/magic/elemental/shard = 1)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/meldt3
 	name = "sorcerous weave - (1 Molten Core, 1 Heartwood Core, 1 Elemental Fragment)"
 	result = /obj/item/magic/melded/t3
-	reqs = list(/obj/item/magic/infernalcore = 1,
+	reqs = list(/obj/item/magic/infernal/core = 1,
 				/obj/item/magic/heartwoodcore = 1,
-				/obj/item/magic/elementalfragment = 1)
+				/obj/item/magic/elemental/fragment = 1)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/meldt4
 	name = "magical confluence - (1 Abyssal Flame, 1 Sylvan Essence, 1 Elemental Relic)"
 	result = /obj/item/magic/melded/t4
-	reqs = list(/obj/item/magic/abyssalflame = 1,
+	reqs = list(/obj/item/magic/infernal/flame = 1,
 				/obj/item/magic/sylvanessence = 1,
-				/obj/item/magic/elementalrelic = 1)
+				/obj/item/magic/elemental/relic = 1)
 	craftdiff = 2
 
 /datum/crafting_recipe/roguetown/arcana/meldt5
@@ -179,3 +185,147 @@
 				/obj/item/magic/voidstone = 1)
 	craftdiff = 2
 
+//upward conversions of materials
+
+//fae conversions
+
+/datum/crafting_recipe/roguetown/arcana/fairydust //T1 mage summon loot
+	name = "fairy dust - (2 berries, 1 crystalized mana)"
+	result = /obj/item/magic/fairydust
+	reqs = list(/obj/item/magic/manacrystal = 1,
+				/obj/item/reagent_containers/food/snacks/grown/berries/rogue = 2)
+	craftdiff = 2
+
+/datum/crafting_recipe/roguetown/arcana/iridescentscale //T2 mage summon loot
+	name = "iridescent scales - (2 fairy dust, 1 fish)"
+	result = /obj/item/magic/iridescentscale
+	reqs = list(/obj/item/magic/fairydust = 2,
+				/obj/item/reagent_containers/food/snacks/fish = 1)
+	craftdiff = 3
+
+/datum/crafting_recipe/roguetown/arcana/heartwoodcore //T3 mage summon loot
+	name = "heartwood core - (2 iridescent scales, 1 small log)"
+	result = /obj/item/magic/heartwoodcore
+	reqs = list(/obj/item/magic/iridescentscale = 2,
+				/obj/item/grown/log/tree/small = 1)
+	craftdiff = 4
+
+/datum/crafting_recipe/roguetown/arcana/sylvanessence //T4 mage summon loot
+	name = "sylvan essence - (4 heartwood core, 1 gemerald)"
+	result = /obj/item/magic/sylvanessence
+	reqs = list(/obj/item/magic/heartwoodcore = 4,
+				/obj/item/roguegem/green= 1)
+	craftdiff = 5
+
+//elemenmtal conversions
+
+/datum/crafting_recipe/roguetown/arcana/elementalmote //T1 mage summon loot
+	name = "elemental mote - (1 runed artifact, 1 crystalized mana)" //making this one a little harder as mining will also produce some
+	result = /obj/item/magic/elemental/mote
+	reqs = list(/obj/item/magic/manacrystal = 1,
+				/obj/item/magic/artifact = 1)
+	craftdiff = 2
+
+/datum/crafting_recipe/roguetown/arcana/elementalshard //T2 mage summon loot
+	name = "elemental shard - (2 elemental mote, 1 copper ore)"
+	result = /obj/item/magic/elemental/shard
+	reqs = list(/obj/item/magic/elemental/mote = 2,
+				/obj/item/rogueore/copper = 1)
+	craftdiff = 3
+
+/datum/crafting_recipe/roguetown/arcana/elementalfragment //T3 mage summon loot
+	name = "elemental fragment - (3 elemental shards, 1 iron ore)"
+	result = /obj/item/magic/elemental/fragment
+	reqs = list(/obj/item/magic/elemental/shard = 3,
+				/obj/item/rogueore/iron = 1)
+	craftdiff = 4
+
+/datum/crafting_recipe/roguetown/arcana/elementalrelic //T4 mage summon loot
+	name = "elemental relic - (4 elemental fragment, 1 topar)"
+	result = /obj/item/magic/elemental/relic
+	reqs = list(/obj/item/magic/elemental/fragment = 4,
+				/obj/item/roguegem/yellow = 1)
+	craftdiff = 5
+
+//infernal conversions
+/datum/crafting_recipe/roguetown/arcana/infernalash //T1 mage summon loot
+	name = "infernal ash - (2 ash, 1 crystalized mana)"
+	result = /obj/item/magic/infernal/ash
+	reqs = list(/obj/item/magic/manacrystal = 1,
+				/obj/item/ash = 2)
+	craftdiff = 2
+
+/datum/crafting_recipe/roguetown/arcana/hellhoundfang //T2 mage summon loot
+	name = "hellhound fang - (2 infernal ash, 1 bone)"
+	result = /obj/item/magic/infernal/fang
+	reqs = list(/obj/item/magic/infernal/ash = 2,
+				/obj/item/natural/bone = 1)
+	craftdiff = 3
+
+/datum/crafting_recipe/roguetown/arcana/infernalcore //T3 mage summon loot
+	name = "infernal core - (3 hellhound fang, 1 coal)"
+	result = /obj/item/magic/infernal/core
+	reqs = list(/obj/item/magic/infernal/fang = 3,
+				/obj/item/rogueore/coal = 1)
+	craftdiff = 4
+
+/datum/crafting_recipe/roguetown/arcana/abyssalflame //T4 mage summon loot
+	name = "abyssal flame - (4 infernal core, 1 rontz)"
+	result = /obj/item/magic/infernal/flame
+	reqs = list(/obj/item/magic/infernal/core = 2,
+				/obj/item/roguegem/ruby = 1)
+	craftdiff = 5
+
+//conversion material for some hard to find materials that don't have a use
+/datum/crafting_recipe/roguetown/arcana/arcynefission1 //gives some T1 and T2 arcane material
+	name = "arcyne fission - (1 essense of wilderness, sea water, 5x clay, 1 skull)"
+	result = list(/obj/item/magic/manacrystal, /obj/item/magic/manacrystal,
+				  /obj/item/magic/manacrystal,
+				  /obj/item/magic/infernal/ash,
+				  /obj/item/magic/infernal/fang,
+				  /obj/item/magic/fairydust,
+				  /obj/item/magic/iridescentscale,
+				  /obj/item/magic/elemental/mote,
+				  /obj/item/magic/elemental/shard)
+	reqs = list(/obj/item/natural/cured/essence = 1,
+				/datum/reagent/water/salty = 15,
+				/obj/item/natural/clay = 5,
+				/obj/item/skull = 1,
+				/obj/item/rogueore/cinnabar = 1)
+	craftdiff = 3
+
+/datum/crafting_recipe/roguetown/arcana/arcynefission2 //gives T1, T2, and T3 arcane material, sorry Tudon
+	name = "arcyne fission - (1 lich's phylactery, sea water, 5x clay, 1 silver ore)"
+	result = list(/obj/item/magic/manacrystal,
+				  /obj/item/magic/manacrystal,
+				  /obj/item/magic/manacrystal,
+				  /obj/item/magic/manacrystal,
+				  /obj/item/magic/manacrystal,
+				  /obj/item/magic/infernal/ash,
+				  /obj/item/magic/infernal/ash,
+				  /obj/item/magic/infernal/fang,
+				  /obj/item/magic/infernal/fang,
+				  /obj/item/magic/infernal/core,
+				  /obj/item/magic/fairydust,
+				  /obj/item/magic/fairydust,
+				  /obj/item/magic/iridescentscale,
+				  /obj/item/magic/iridescentscale,
+				  /obj/item/magic/heartwoodcore,
+				  /obj/item/magic/elemental/mote,
+				  /obj/item/magic/elemental/mote,
+				  /obj/item/magic/elemental/shard,
+				  /obj/item/magic/elemental/shard,
+				  /obj/item/magic/elemental/fragment,)
+	reqs = list(/obj/item/phylactery = 1,
+				/datum/reagent/water/salty = 15,
+				/obj/item/natural/clay = 5,
+				/obj/item/rogueore/silver= 1,
+				/obj/item/rogueore/cinnabar = 1)
+	craftdiff = 5
+
+/datum/crafting_recipe/roguetown/arcana/findfamiliar
+	name = "Find Familiar - (Crystalised Mana, Scroll)"
+	result = /obj/item/book/granter/spell/blackstone/familiar
+	reqs = list(/obj/item/magic/manacrystal = 1,
+				/obj/item/paper/scroll = 1)
+	craftdiff = 1
