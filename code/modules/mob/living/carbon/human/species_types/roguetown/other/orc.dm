@@ -1,6 +1,9 @@
 /datum/species/orc
 	name = "Orc"
 	id = "orc"
+	origin_default = /datum/virtue/origin/gronn
+	origin = "Gronn"
+	base_name = "Ogroid"
 	desc = "<b>Orcs</b><br>\
 	This is made for events. You shouldn't be able to use this as a normal person, \
 	For courtesies sake however, I've tried to half-assedly balance it for use by players\
@@ -11,7 +14,7 @@
 	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,STUBBLE,OLDGREY)
 	inherent_traits = list(TRAIT_NOMOBSWAP)
 	default_features = MANDATORY_FEATURE_LIST
-	use_skintones = 1
+	use_skintones = TRUE
 	disliked_food = NONE
 	liked_food = NONE
 	possible_ages = ALL_AGES_LIST
@@ -72,6 +75,7 @@
 		/datum/customizer/bodypart_feature/face_detail,
 		/datum/customizer/bodypart_feature/underwear,
 		/datum/customizer/bodypart_feature/legwear,
+		/datum/customizer/bodypart_feature/piercing,
 		/datum/customizer/organ/testicles/anthro,
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,

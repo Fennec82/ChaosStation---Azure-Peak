@@ -7,7 +7,7 @@
 			return FALSE
 	if(has_status_effect(/datum/status_effect/debuff/riposted))
 		return FALSE
-	if(has_status_effect(/datum/status_effect/debuff/exposed))
+	if(has_status_effect(/datum/status_effect/debuff/exposed) || has_status_effect(/datum/status_effect/debuff/vulnerable))
 		return FALSE
 	last_dodge = world.time
 	if(src.loc == user.loc)
@@ -15,6 +15,8 @@
 	if(intenty)
 		if(!intenty.candodge)
 			return FALSE
+	if(HAS_TRAIT(src, TRAIT_NODEF))
+		return FALSE
 	if(candodge)
 		var/list/dirry = list()
 		var/dx = x - user.x
@@ -160,16 +162,19 @@
 		if(!(L.mobility_flags & MOBILITY_STAND))
 			prob2defend *= 0.25
 
-		if(HAS_TRAIT(H, TRAIT_SENTINELOFWITS))
+		if(H && HAS_TRAIT(H, TRAIT_SENTINELOFWITS))
 			var/sentinel = H.calculate_sentinel_bonus()
 			prob2defend += sentinel
+
+		if(UH && HAS_TRAIT(UH, TRAIT_ARMOUR_LIKED))
+			if(HAS_TRAIT(UH, TRAIT_FENCERDEXTERITY))
+				prob2defend -= 10
 
 		prob2defend = clamp(prob2defend, 5, 90)
 
 		//------------Dual Wielding Checks------------
 		var/attacker_dualw
 		var/defender_dualw
-		var/extraattroll
 		var/extradefroll
 		var/mainhand = L.get_active_held_item()
 		var/offhand	= L.get_inactive_held_item()
@@ -185,13 +190,10 @@
 		var/obj/item/offh = U.get_inactive_held_item()
 		if(mainh && offh && HAS_TRAIT(U, TRAIT_DUALWIELDER))
 			if(istype(mainh, offh))
-				extraattroll = prob(prob2defend)
 				attacker_dualw = TRUE
 		//----------Dual Wielding check end---------
 
 		var/attacker_feedback 
-		if(user.client?.prefs.showrolls && (attacker_dualw || defender_dualw))
-			attacker_feedback = "Attacking with advantage. ([100 - ((prob2defend / 100) * (prob2defend / 100) * 100)]%)"
 
 		if(src.client?.prefs.showrolls)
 			var/text = "Roll to dodge... [prob2defend]%"
@@ -209,7 +211,7 @@
 			if(prob(prob2defend))
 				dodge_status = TRUE
 		else if(attacker_dualw)
-			if(prob(prob2defend) && extraattroll)
+			if(prob(prob2defend))
 				dodge_status = TRUE
 		else if(defender_dualw)
 			if(prob(prob2defend) && extradefroll)
@@ -222,7 +224,12 @@
 			return FALSE
 		if(!UH?.mind) // For NPC, reduce the drained to 5 stamina
 			drained = drained_npc
-		if(!H.stamina_add(max(drained,5)))
+
+		//Tempo bonus
+		var/stamdrain = max(drained,5)
+		stamdrain -= H.get_tempo_bonus(TEMPO_TAG_STAMLOSS_DODGE)
+
+		if(!H.stamina_add(stamdrain))
 			to_chat(src, span_warning("I'm too tired to dodge!"))
 			return FALSE
 	else //we are a non human
@@ -255,20 +262,16 @@
 			probclip += lucmod * 10
 		if(prob(probclip) && IS && IU)
 			var/intdam = IS.max_blade_int ? INTEG_PARRY_DECAY : INTEG_PARRY_DECAY_NOSHARP
+			var/sharp_loss = SHARPNESS_ONHIT_DECAY
+			if(istype(user.rmb_intent, /datum/rmb_intent/strong))
+				sharp_loss += STRONG_SHP_BONUS
+				intdam += STRONG_INTG_BONUS
+
 			IS.take_damage(intdam, BRUTE, IU.d_type)
-			IS.remove_bintegrity(SHARPNESS_ONHIT_DECAY, src)
+			IS.remove_bintegrity(sharp_loss, src)
 
 			user.visible_message(span_warning("<b>[user]</b> clips [src]'s weapon!"))
 			playsound(user, 'sound/misc/weapon_clip.ogg', 100)
-
-	if(mind && user.mind && HAS_TRAIT(src, TRAIT_COMBAT_AWARE))
-		var/text = "[bodyzone2readablezone(user.zone_selected)]..."
-		if(HAS_TRAIT(user, TRAIT_DECEIVING_MEEKNESS))
-			if(prob(10))
-				text = "<i>Can't tell...</i>"
-				user.balloon_alert(src, text)
-		else
-			user.balloon_alert(src, text)
 	dodgecd = FALSE
 //		if(H)
 //			if(H.IsOffBalanced())

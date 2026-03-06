@@ -29,6 +29,8 @@
 	if(motd)
 		to_chat(src, "<div class=\"motd\">[motd]</div>", handle_whitespace=FALSE)
 
+	to_chat(src, span_notice("Welcome to the [SSticker.realm_type] of [SSticker.realm_name]."))
+
 	if(GLOB.rogue_round_id)
 		to_chat(src, span_info("ROUND ID: [GLOB.rogue_round_id]"))
 
@@ -51,7 +53,6 @@
 			if(5)
 				shown_patreon_level = "Lord"
 		to_chat(src, span_info("Donator Level: [shown_patreon_level]"))
-	client.recent_changelog()
 
 	if(GLOB.admin_notice)
 		to_chat(src, span_notice("<b>Admin Notice:</b>\n \t [GLOB.admin_notice]"))

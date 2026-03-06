@@ -16,8 +16,15 @@
 		forceMove(get_turf(A))
 		update_parallax_contents()
 
-/mob/dead/observer/rogue/DblClickOn(atom/A, params)
+/mob/dead/observer/profane/DblClickOn(atom/A, params) // Souls trapped by the dagger should not be jumping around.
 	return
+
+/mob/dead/observer/rogue/DblClickOn(atom/A, params)
+	var/mob/target
+	if(ismob(A))
+		target = A
+	if(target && (target.client.prefs.ghost_toggles & TOGGLE_ANTIGHOST))
+		return
 
 /mob/dead/observer/ClickOn(atom/A, params)
 	if(check_click_intercept(params,A))

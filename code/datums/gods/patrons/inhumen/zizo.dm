@@ -13,6 +13,7 @@
 					/obj/effect/proc_holder/spell/invoked/raise_undead_guard/miracle	= CLERIC_T2,
 					/obj/effect/proc_holder/spell/invoked/tame_undead/miracle			= CLERIC_T3,
 					/obj/effect/proc_holder/spell/invoked/rituos/miracle 				= CLERIC_T3,
+					/obj/effect/proc_holder/spell/invoked/resurrect/zizo				= CLERIC_T4
 	)
 	confess_lines = list(
 		"PRAISE ZIZO!",
@@ -21,11 +22,19 @@
 	)
 	storyteller = /datum/storyteller/zizo
 
+/datum/patron/inhumen/zizo/post_equip(mob/living/pious)
+	. = ..()
+	if(ishuman(pious))
+		var/mob/living/carbon/human/human = pious
+		var/datum/devotion/pious_devotion = human.devotion
+		if(pious_devotion?.level >= CLERIC_T2)
+			pious.grant_language(/datum/language/undead)
+
 // When the sun is blotted out, zchurch, bad-cross, or ritual chalk
 /datum/patron/inhumen/zizo/can_pray(mob/living/follower)
 	. = ..()
 	// Allows prayer in the Zzzzzzzurch(!)
-	if(istype(get_area(follower), /area/rogue/indoors/shelter/mountains))
+	if(istype(get_area(follower), /area/rogue/under/cave/inhumen))
 		return TRUE
 	// Allows prayer near EEEVIL psycross
 	for(var/obj/structure/fluff/psycross/zizocross/cross in view(4, get_turf(follower)))
@@ -51,8 +60,10 @@
     message_out,
     message_self,
     conditional_buff,
-    situational_bonus
+    situational_bonus,
+	is_inhumen
 )
+	*is_inhumen = TRUE
 	*message_out = span_info("Vital energies are sapped towards [target]!")
 	*message_self = span_notice("The life around me pales as I am restored!")
 

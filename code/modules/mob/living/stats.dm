@@ -1,12 +1,19 @@
-	
+
 
 /mob/living
+	/// Strength.
 	var/STASTR = 10
+	/// Perception.
 	var/STAPER = 10
+	/// Intelligence.
 	var/STAINT = 10
+	/// Constitution.
 	var/STACON = 10
+	/// Willpower.
 	var/STAWIL = 10
+	/// Speed.
 	var/STASPD = 10
+	/// Luck.
 	var/STALUC = 10
 	//buffers, the 'true' amount of each stat
 	var/BUFSTR = 0
@@ -40,8 +47,9 @@
 	// Associative list of stat (STAT_STRENGTH, etc) bonuses used to differentiate each race. They should ALWAYS be positive.
 	var/list/race_bonus = list()
 	var/construct = 0
+	var/gibs_on_shapeshift = FALSE
 
-/mob/living/proc/roll_stats()
+/mob/living/proc/roll_stats(mob/dead/new_player/new_player)
 	STASTR = 10
 	STAPER = 10
 	STAINT = 10
@@ -53,7 +61,7 @@
 		var/mob/living/carbon/human/H = src
 
 		if (H.statpack)
-			H.statpack.apply_to_human(H)
+			H.statpack.apply_to_human(H, new_player)
 		if (H.dna?.species) // LETHALSTONE EDIT: apply our race bonus, if we have one
 			var/datum/species/species = H.dna.species
 			if (species.race_bonus)
@@ -64,6 +72,7 @@
 			if(AGE_MIDDLEAGED)
 				change_stat(STATKEY_SPD, -1)
 				change_stat(STATKEY_WIL, 1)
+				change_stat(STATKEY_LCK, 1)
 			if(AGE_OLD)
 				change_stat(STATKEY_STR, -1)
 				change_stat(STATKEY_SPD, -2)
@@ -80,7 +89,7 @@
 				change_stat(STATKEY_INT, -20)
 				change_stat(STATKEY_LCK, -20)
 			if(check_psychokiller(ckey(key)))
-				testing("foundpsych")
+
 				H.eye_color = "ff0000"
 				H.voice_color = "ff0000"
 
@@ -224,6 +233,8 @@
 			while(newamt > 20)
 				newamt--
 				BUFEND++
+
+			pain_threshold += amt * 10
 			STAWIL = newamt
 
 		if(STATKEY_SPD)
@@ -267,6 +278,22 @@
 				BUFLUC++
 			STALUC = newamt
 
+/// Calculates a luck value in the range [1, 400] (calculated as STALUC^2), then maps the result linearly to the given range
+/// min must be >= 0, max must be <= 100, and min must be <= max
+/// For giving
+/mob/living/proc/get_scaled_sq_luck(min, max)
+	if (min < 0)
+		min = 0
+	if (max > 100)
+		max = 100
+	if (min > max)
+		var/temp = min
+		min = max
+		max = temp
+	var/adjusted_luck = (src.STALUC * src.STALUC) / 400
+
+	return LERP(min, max, adjusted_luck)
+
 /proc/generic_stat_comparison(userstat as num, targetstat as num)
 	var/difference = userstat - targetstat
 	if(difference > 1 || difference < -1)
@@ -274,13 +301,41 @@
 	else
 		return 0
 
-/mob/living/proc/badluck(multi = 3)
-	if(STALUC < 10)
-		return prob((10 - STALUC) * multi)
+/mob/living/proc/badluck(multi = 3, ignore_effects = FALSE)
+	if(ignore_effects)
+		var/truefor = get_true_stat(STATKEY_LCK)
+		if(truefor < 10)
+			var/failed = prob((10 - truefor) * multi)
+			// if we failed, but we're a xylixian devotee, we get another shot
+			if(failed && HAS_TRAIT(src, TRAIT_XYLIX_DEVOTEE))
+				failed = prob((10 - truefor) * multi)
+				// if xylix twisted fate into our favour, get a little jingle from them
+				if(!failed)
+					play_overhead_indicator('icons/mob/overhead_effects.dmi', "sign_Xylix", 15, MUTATIONS_LAYER, private = TRAIT_XYLIX_DEVOTEE, soundin = 'sound/items/gem.ogg', y_offset = 32)
+					add_stress(/datum/stressevent/xylixian_pity)
+			return failed
+	else if(STALUC < 10)
+		var/failed = prob((10 - STALUC) * multi)
+		// if we failed, but we're a xylixian devotee, we get another shot
+		if(failed && HAS_TRAIT(src, TRAIT_XYLIX_DEVOTEE))
+			failed = prob((10 - STALUC) * multi)
+			// if xylix twisted fate into our favour, get a little jingle from them
+			if(!failed)
+				play_overhead_indicator('icons/mob/overhead_effects.dmi', "sign_Xylix", 15, MUTATIONS_LAYER, private = TRAIT_XYLIX_DEVOTEE, soundin = 'sound/items/gem.ogg', y_offset = 32)
+				add_stress(/datum/stressevent/xylixian_pity)
+		return failed
 
 /mob/living/proc/goodluck(multi = 3)
 	if(STALUC > 10)
-		return prob((STALUC - 10) * multi)
+		var/succeeded = prob((STALUC - 10) * multi)
+		// if we didn't succeed, but we're a xylixian devotee, we get another shot
+		if(!succeeded && HAS_TRAIT(src, TRAIT_XYLIX_DEVOTEE))
+			succeeded = prob((STALUC - 10) * multi)
+			// if xylix twisted fate into our favour, get a little jingle from them
+			if(succeeded)
+				play_overhead_indicator('icons/mob/overhead_effects.dmi', "sign_Xylix", 15, MUTATIONS_LAYER, private = TRAIT_XYLIX_DEVOTEE, soundin = 'sound/items/gem.ogg', y_offset = 32)
+				add_stress(/datum/stressevent/xylixian_fate)
+		return succeeded
 
 /mob/living/proc/get_stat_level(stat_keys)
 	switch(stat_keys)
@@ -298,3 +353,41 @@
 			return STASPD
 		if(STATKEY_LCK)
 			return STALUC
+
+///Effectively rolls a d20, with each point in the stat being a chance_per_point% chance to succeed per point in the stat. If no stat is provided, just returns 0.
+///dee_cee is a difficulty mod, a positive value makes the check harder, a negative value makes it easier.
+///invert_dc changes it from stat - dc to dc - stat, for inverted checks.
+///EG: A person with 10 luck and a dc of -10 effectively has a 100% chance of success. Or an inverted DC with 10 means 0% chance of success.
+/mob/living/proc/stat_roll(stat_key,chance_per_point = 5, dee_cee = null, invert_dc = FALSE)
+	if(!stat_key)
+		return FALSE
+	var/tocheck
+	switch(stat_key)
+		if(STATKEY_STR)
+			tocheck = STASTR
+		if(STATKEY_PER)
+			tocheck = STAPER
+		if(STATKEY_WIL)
+			tocheck = STAWIL
+		if(STATKEY_CON)
+			tocheck = STACON
+		if(STATKEY_INT)
+			tocheck = STAINT
+		if(STATKEY_SPD)
+			tocheck = STASPD
+		if(STATKEY_LCK)
+			tocheck = STALUC
+	if(invert_dc)
+		return isnull(dee_cee) ? prob(tocheck * chance_per_point) : prob(clamp((dee_cee - tocheck) * chance_per_point,0,100))
+	else
+		return isnull(dee_cee) ? prob(tocheck * chance_per_point) : prob(clamp((tocheck - dee_cee) * chance_per_point,0,100))
+
+/mob/living/proc/reset_stats()
+	STASTR = 10
+	STAPER = 10
+	STAINT = 10
+	STACON = 10
+	STAWIL = 10
+	STASPD = 10
+	STALUC = 10
+	return

@@ -49,11 +49,8 @@
 
 /datum/migrant_role/vampire
 	name = "Adventurer"
-	antag_datum = /datum/antagonist/vampirelord/lesser/migrant
+	antag_datum = /datum/antagonist/vampire
 	advclass_cat_rolls = list(CTAG_ADVENTURER = 5)
-
-/datum/antagonist/vampirelord/lesser/migrant/move_to_spawnpoint()
-	return
 
 /datum/round_event_control/antagonist/migrant_wave/unbound_death_knight
 	name = "Death knight (Unbound)"
@@ -80,4 +77,31 @@
 /datum/migrant_role/unbound_death_knight
 	name = "Adventurer"
 	antag_datum = /datum/antagonist/unbound_death_knight
+	advclass_cat_rolls = null
+
+/datum/round_event_control/antagonist/migrant_wave/unbound_spellblade
+	name = "Ancient Spellblade (Unbound)"
+	wave_type = /datum/migrant_wave/unbound_spellblade
+
+	weight = 6
+	max_occurrences = 2
+
+	earliest_start = 10 MINUTES
+
+	tags = list(
+		TAG_HAUNTED,
+		TAG_COMBAT,
+		TAG_VILLIAN,
+	)
+
+/datum/migrant_wave/unbound_spellblade
+	name = "Ancient Spellblade (Unbound)"
+	roles = list(
+		/datum/migrant_role/unbound_spellblade = 1,
+	)
+	can_roll = FALSE
+
+/datum/migrant_role/unbound_spellblade
+	name = "Adventurer"
+	antag_datum = /datum/antagonist/unbound_spellblade
 	advclass_cat_rolls = null

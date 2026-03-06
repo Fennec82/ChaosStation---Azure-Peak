@@ -30,7 +30,9 @@
 /mob/living/carbon/human/death(gibbed, nocutscene = FALSE)
 	if(stat == DEAD)
 		return
-
+	if(QDELETED(src) || !loc)
+		return
+		
 	var/area/A = get_area(src)
 	dna?.species?.stop_wagging_tail(src)
 
@@ -41,8 +43,16 @@
 
 	if(mind)
 		if(!gibbed)
-			var/datum/antagonist/vampirelord/VD = mind.has_antag_datum(/datum/antagonist/vampirelord)
-			if(VD)
+			//var/datum/antagonist/vampire/VD = mind.has_antag_datum(/datum/antagonist/vampire)
+			var/has_secondlife = HAS_TRAIT(mind.current, TRAIT_SECONDLIFE)
+			if(has_secondlife)
+				var/respawn_time = 5 SECONDS
+				var/datum/mind/playermind = mind
+				addtimer(CALLBACK(src, PROC_REF(secondliferespawn), playermind), respawn_time, TIMER_UNIQUE)
+				REMOVE_TRAIT(mind.current,TRAIT_SECONDLIFE,TRAIT_GENERIC)
+
+			var/has_dust_trait = HAS_TRAIT(mind.current, TRAIT_DUSTABLE)
+			if(has_dust_trait)
 				dust(just_ash=TRUE,drop_items=TRUE)
 				return
 
@@ -68,6 +78,7 @@
 		if(ishumannorthern(src))
 			record_round_statistic(STATS_HUMEN_DEATHS)
 		if(mind)
+			cmode = FALSE
 			if(mind.assigned_role in GLOB.church_positions)
 				record_round_statistic(STATS_CLERGY_DEATHS)
 			if(mind.has_antag_datum(/datum/antagonist/vampire))
@@ -129,12 +140,13 @@
 				for(var/mob/living/carbon/human/HU in GLOB.player_list)
 					if(!HU.stat && is_in_roguetown(HU))
 						HU.playsound_local(get_turf(HU), 'sound/music/lorddeath.ogg', 80, FALSE, pressure_affected = FALSE)
+				launch_omen_event()
 			if("Bishop")
 				addomen(OMEN_NOPRIEST)
-//		if(yeae)
-//			if(mind)
-//				if((mind.assigned_role == "Lord") || (mind.assigned_role == "Priest") || (mind.assigned_role == "Knight Captain") || (mind.assigned_role == "Merchant"))
-//					addomen(OMEN_NOBLEDEATH)
+				launch_omen_event()
+			if("Inquisitor")
+				addomen(OMEN_INQUISITORDEATH)
+				launch_omen_event()
 
 		if(!gibbed && yeae)
 			for(var/mob/living/carbon/human/HU in viewers(7, src))
@@ -177,3 +189,34 @@
 				CA.adjust_triumphs(-1)
 			CA.add_stress(/datum/stressevent/viewgib)
 	return ..()
+
+/mob/living/carbon/human/proc/secondliferespawn(datum/mind/mind)
+	var/mob_type = /mob/living/carbon/human
+	var/turf/T = get_turf(src)
+	var/mob/living/body
+
+	//drop everything they had on the ground
+	if(T)
+		for(var/X in bodyparts)
+			var/obj/item/bodypart/BP = X
+			for(var/obj/item/I as anything in BP.embedded_objects)
+				I.forceMove(T)
+
+	if(mind.current)
+		if(mind.current.stat != DEAD)
+			return
+		else
+			body = mind.current
+	if(!body)
+		body = new mob_type(T)
+		var/mob/ghostie = mind.get_ghost(TRUE)
+		if(ghostie.client && ghostie.client.prefs)
+			ghostie.client.prefs.copy_to(body)
+		mind.transfer_to(body)
+	else
+		body.forceMove(pick(GLOB.secondlife_respawns))
+		body.revive(full_heal = TRUE, admin_revive = TRUE)
+	mind.grab_ghost(TRUE)
+	body.flash_act()
+
+	playsound(T, 'sound/magic/antimagic.ogg', 50, TRUE)

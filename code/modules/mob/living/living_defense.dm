@@ -46,7 +46,29 @@
 /mob/living/proc/on_hit(obj/projectile/P)
 	return BULLET_ACT_HIT
 
+/// Checks if our Guard (clash) or parry buffer can deflect this projectile.
+/// Returns TRUE if deflected (caller should return early), FALSE otherwise.
+// Reactive spell defense - guard will deflect magical projectiles to add a measure of counterplay. It doesn't care whether it is a low value or a high value projectiles.
+// If deflectable, the guard is consumed cleanly and apply a 1 second buffer for multi-projectile spells (or extremely tightly timed barrage)
+// Non deflectable projectiles will fall through to disruption as normal, with the guard being consumed and applying a bad_guard penalty if applicable.
+/mob/living/proc/guard_deflect_projectile(obj/projectile/P)
+	if(!P.guard_deflectable)
+		return FALSE
+	var/datum/status_effect/buff/clash/guard = has_status_effect(/datum/status_effect/buff/clash)
+	if(guard)
+		if(P.on_guard_deflect(src))
+			apply_status_effect(/datum/status_effect/buff/parry_buffer)
+			remove_status_effect(/datum/status_effect/buff/clash)
+			return TRUE
+		return FALSE
+	if(has_status_effect(/datum/status_effect/buff/parry_buffer))
+		if(P.on_guard_deflect(src, silent = TRUE))
+			return TRUE
+	return FALSE
+
 /mob/living/bullet_act(obj/projectile/P, def_zone = BODY_ZONE_CHEST)
+	if(SEND_SIGNAL(src, COMSIG_ATOM_BULLET_ACT, P, def_zone) & COMPONENT_ATOM_BLOCK_BULLET)
+		return
 	def_zone = bullet_hit_accuracy_check(P.accuracy + P.bonus_accuracy, def_zone)
 	var/ap = (P.flag == "blunt") ? BLUNT_DEFAULT_PENFACTOR : P.armor_penetration
 	var/armor = run_armor_check(def_zone, P.flag, "", "",armor_penetration = ap, damage = P.damage, used_weapon = P)
@@ -58,7 +80,7 @@
 	if(!P.nodamage && on_hit_state != BULLET_ACT_BLOCK)
 		if(!apply_damage(P.damage, P.damage_type, def_zone, armor))
 			nodmg = TRUE
-			next_attack_msg += " <span class='warning'>Armor stops the damage.</span>"
+			next_attack_msg += VISMSG_ARMOR_BLOCKED
 		apply_effects(stun = P.stun, knockdown = P.knockdown, unconscious = P.unconscious, slur = P.slur, stutter = P.stutter, eyeblur = P.eyeblur, drowsy = P.drowsy, blocked = armor, stamina = P.stamina, jitter = P.jitter, paralyze = P.paralyze, immobilize = P.immobilize)
 		if(!nodmg)
 			if(P.dismemberment)
@@ -119,14 +141,16 @@
 		// Hit the selected zone, or else a random zone centered on the chest
 		var/zone = throwingdatum?.target_zone || ran_zone(BODY_ZONE_CHEST, 65)
 		SEND_SIGNAL(I, COMSIG_MOVABLE_IMPACT_ZONE, src, zone)
+		if(SEND_SIGNAL(src, COMSIG_LIVING_IMPACT_ZONE, I, zone) & COMPONENT_CANCEL_THROW)
+			return FALSE
 		if(!blocked)
-			var/ap = (damage_flag == "blunt") ? BLUNT_DEFAULT_PENFACTOR : I.armor_penetration 
+			var/ap = (damage_flag == "blunt") ? BLUNT_DEFAULT_PENFACTOR : I.armor_penetration
 			var/armor = run_armor_check(zone, damage_flag, "", "", armor_penetration = ap, damage = I.throwforce, used_weapon = I)
 			next_attack_msg.Cut()
 			var/nodmg = FALSE
 			if(!apply_damage(I.throwforce, I.damtype, zone, armor))
 				nodmg = TRUE
-				next_attack_msg += " <span class='warning'>Armor stops the damage.</span>"
+				next_attack_msg += VISMSG_ARMOR_BLOCKED
 			if(!nodmg)
 				if(iscarbon(src))
 					var/obj/item/bodypart/affecting = get_bodypart(zone)
@@ -147,6 +171,16 @@
 			next_attack_msg.Cut()
 			if(I.thrownby)
 				log_combat(I.thrownby, src, "threw and hit", I)
+			var/volume = I.get_volume_by_throwforce_and_or_w_class()
+			if (I.throwforce > 0)
+				if (I.mob_throw_hit_sound)
+					playsound(src, I.mob_throw_hit_sound, volume, TRUE, -1)
+				else if(I.hitsound)
+					playsound(src, pick(I.hitsound), volume, TRUE, -1)
+				else
+					playsound(src, 'sound/blank.ogg',volume, TRUE, -1)
+			else
+				playsound(src, 'sound/blank.ogg', volume, -1)
 		else
 			return 1
 
@@ -182,7 +216,7 @@
 
 //proc to upgrade a simple pull into a more aggressive grab.
 /mob/living/proc/grippedby(mob/living/carbon/user, instant = FALSE)
-	user.changeNext_move(CLICK_CD_GRABBING * 2 - user.STASPD)
+	user.changeNext_move(CLICK_CD_TRACKING)
 	var/skill_diff = 0
 	var/combat_modifier = 1
 	if(user.mind)
@@ -212,7 +246,10 @@
 	for(var/obj/item/grabbing/G in grabbedby)
 		if(G.chokehold == TRUE)
 			combat_modifier += 0.15
-
+	if(!instant && !surrendering && !restrained() && !compliance)
+		if(user.badluck(10))
+			badluckmessage(user)
+			return
 	var/probby
 	if(!compliance)
 		probby = clamp((((4 + (((user.STASTR - STASTR)/2) + skill_diff)) * 10 + rand(-5, 5)) * combat_modifier), 5, 95)
@@ -228,16 +265,19 @@
 			to_chat(user, span_warning("I struggle with [src]!"))
 		playsound(src.loc, 'sound/foley/struggle.ogg', 100, FALSE, -1)
 		user.Immobilize(2 SECONDS)
-		user.changeNext_move(2 SECONDS)
+		user.changeNext_move(CLICK_CD_TRACKING)
 		src.Immobilize(1 SECONDS)
-		src.changeNext_move(1 SECONDS)
+		src.changeNext_move(CLICK_CD_GRABBING)
+		if(user.badluck(5))
+			badluckmessage(user)
+			user.stop_pulling()
 		return
 
 	if(!instant)
 		var/sound_to_play = 'sound/foley/grab.ogg'
 		playsound(src.loc, sound_to_play, 100, FALSE, -1)
 
-	testing("eheh1")
+
 	user.setGrabState(GRAB_AGGRESSIVE)
 	if(user.active_hand_index == 1)
 		if(user.r_grab)
@@ -255,7 +295,8 @@
 	if(user != src)
 		if(pulling != user) // If the person we're pulling aggro grabs us don't break the grab
 			stop_pulling()
-		user.set_pull_offsets(src, user.grab_state)
+		if(!is_shifted)
+			user.set_pull_offsets(src, user.grab_state)
 	log_combat(user, src, "grabbed", addition="aggressive grab[add_log]")
 	return 1
 
@@ -327,28 +368,28 @@
 	playsound(get_turf(M), pick(M.attack_sound), 100, FALSE)
 
 	var/cached_intent = M.used_intent
+	if(cached_intent)
+		sleep(M.used_intent.swingdelay)
+		M.swinging = FALSE
+		if(M.a_intent != cached_intent)
+			return FALSE
+		if(QDELETED(src) || QDELETED(M))
+			return FALSE
+		if(!M.CanReach(src)) // Possible performance hit.
+			return FALSE
+		if(M.incapacitated())
+			return FALSE
 
-	sleep(M.used_intent.swingdelay)
-	M.swinging = FALSE
-	if(M.a_intent != cached_intent)
-		return FALSE
-	if(QDELETED(src) || QDELETED(M))
-		return FALSE
-	if(!M.CanReach(src)) // Possible performance hit.
-		return FALSE
-	if(M.incapacitated())
-		return FALSE
+		if(checkmiss(M))
+			return FALSE
 
-	if(checkmiss(M))
-		return FALSE
+		if(checkdefense(M.a_intent, M))
+			return FALSE
 
-	if(checkdefense(M.a_intent, M))
-		return FALSE
+		if(M.attack_sound)
+			playsound(loc, M.a_intent.hitsound, 100, FALSE)
 
-	if(M.attack_sound)
-		playsound(loc, M.a_intent.hitsound, 100, FALSE)
-
-	log_combat(M, src, "attacked")
+		log_combat(M, src, "attacked")
 
 	return TRUE
 

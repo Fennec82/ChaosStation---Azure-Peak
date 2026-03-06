@@ -4,11 +4,20 @@
 	opacity = 1
 	density = TRUE
 	blocks_air = TRUE
-	baseturfs = list(/turf/open/floor/rogue/naturalstone, /turf/open/transparent/openspace)
+	baseturfs = /turf/open/floor/rogue/naturalstone
+	plane = WALL_PLANE
 	var/above_floor
 	var/wallpress = TRUE
 	var/wallclimb = FALSE
 	var/climbdiff = 0
+
+/turf/closed/basic
+	baseturfs = /turf/closed/basic
+
+/turf/closed/basic/New()//Do not convert to Initialize
+	SHOULD_CALL_PARENT(FALSE)
+	//This is used to optimize the map loader
+	return
 
 /turf/closed/MouseDrop_T(atom/movable/O, mob/user)
 	. = ..()
@@ -23,14 +32,6 @@
 		if(L.mobility_flags & MOBILITY_MOVE)
 			wallpress(L)
 			return
-			
-/turf/closed/proc/feel_turf(mob/living/user)
-	to_chat(user, span_notice("I start feeling around [src]"))
-	if(!do_after(user, 1.5 SECONDS, src))
-		return
-
-	for(var/obj/structure/lever/hidden/lever in contents)
-		lever.feel_button(user)
 
 /turf/closed/proc/wallpress(mob/living/user)
 	if(user.wallpressed)
@@ -155,20 +156,57 @@
 					to_chat(user, span_warning("I can't climb here."))
 					return
 			var/used_time = 0
+			var/list/helping_items = list()
 			if(L.mind)
 				var/myskill = L.get_skill_level(/datum/skill/misc/climbing)
+
+				var/has_step_ladder = FALSE
 				var/obj/structure/table/TA = locate() in L.loc
 				if(TA)
 					myskill += 1
-				else
+					helping_items += TA.name
+					has_step_ladder = TRUE
+				if(!has_step_ladder)
 					var/obj/structure/chair/CH = locate() in L.loc
 					if(CH)
 						myskill += 1
-					var/obj/structure/wallladder/WL = locate() in L.loc
-					if(WL)
-						if(get_dir(WL.loc,src) == WL.dir)
-							myskill += 8
-							climbsound = 'sound/foley/ladder.ogg'
+						helping_items += CH.name
+						has_step_ladder = TRUE
+				if(!has_step_ladder)
+					for(var/mob/living/carbon/human/human in L.loc)
+						if(human == L)
+							continue
+						if(!human.cmode && !human.get_active_held_item() && human.mob_size >= MOB_SIZE_HUMAN)
+							myskill += 1
+							helping_items += human.name
+							has_step_ladder = TRUE
+							break
+				if(!has_step_ladder)
+					for(var/mob/living/simple_animal/animal in L.loc)
+						if(animal == L)
+							continue
+						if(animal.tame && animal.mob_size >= MOB_SIZE_HUMAN)
+							myskill += 1
+							helping_items += animal.name
+							has_step_ladder = TRUE
+							break
+
+				var/has_wall_ladder = FALSE
+				for(var/obj/structure/wallladder/WL in L.loc)
+					if(get_dir(WL.loc,src) == WL.dir)
+						myskill += 8
+						climbsound = 'sound/foley/ladder.ogg'
+						helping_items += WL.name
+						has_wall_ladder = TRUE
+						break
+				if(!has_wall_ladder)
+					for(var/obj/structure/rope_ladder/rope in L.loc)
+						if(get_dir(rope.loc, src) == rope.dir)
+							myskill += 5
+							climbsound = 'sound/foley/noose_idle.ogg'
+							helping_items += rope.name
+							has_wall_ladder = TRUE
+							break
 
 				if(myskill < climbdiff)
 					to_chat(user, span_warning("I'm not capable of climbing this wall."))
@@ -176,7 +214,7 @@
 				used_time = max(70 - (myskill * 10) - (L.STASPD * 3), 30)
 			if(user.m_intent != MOVE_INTENT_SNEAK)
 				playsound(user, climbsound, 100, TRUE)
-			user.visible_message(span_warning("[user] starts to climb [src]."), span_warning("I start to climb [src]..."))
+			user.visible_message(span_warning("[user] starts to climb [src][length(helping_items) ? " with the help of \the [english_list(helping_items)]" : ""]."), span_warning("I start to climb [src][length(helping_items) ? " with the help of \the [english_list(helping_items)]" : ""]..."))
 			if(do_after(L, used_time, target = src))
 				var/pulling = user.pulling
 				var/mob/living/carbon/human/climber = user
@@ -213,6 +251,7 @@
 					playsound(user, 'sound/foley/climb.ogg', 100, TRUE)
 				if(L.mind)
 					L.mind.add_sleep_experience(/datum/skill/misc/climbing, (L.STAINT/2), FALSE)
+				return TRUE
 	else
 		..()
 
@@ -257,6 +296,14 @@
 	if(istype(mover) && (mover.pass_flags & PASSCLOSEDTURF))
 		return TRUE
 	return ..()
+
+/turf/closed/proc/feel_turf(mob/living/user)
+	to_chat(user, span_notice("I start feeling around [src]"))
+	if(!do_after(user, 1.5 SECONDS, src))
+		return
+
+	for(var/obj/structure/lever/hidden/lever in contents)
+		lever.feel_button(user)
 
 /turf/closed/indestructible
 	name = "wall"

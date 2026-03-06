@@ -1,6 +1,8 @@
 /mob/living/simple_animal/hostile/retaliate/rogue/elemental/behemoth
 	icon = 'icons/mob/summonable/32x64.dmi'
 	name = "earthen behemoth"
+	desc = "A large earthen construct of dirt and rock, lumbering with the strength of eons. \
+	A rare sight, said to be a sign of severe imbalance that requires correction."
 	summon_primer = "You are an behemoth, a large elemental. Elementals such as yourself often lead groups of wardens in defending your plane. Now you've been pulled from your home into a new world, that is decidedly less peaceful then your carefully guarded plane. How you react to these events, only time can tell."
 	summon_tier = 3
 	icon_state = "behemoth"
@@ -33,6 +35,7 @@
 	pooptype = null
 	simple_detect_bonus = 20
 	deaggroprob = 0
+	canparry = TRUE
 	defprob = 40
 	// del_on_deaggro = 44 SECONDS
 	retreat_health = 0.3

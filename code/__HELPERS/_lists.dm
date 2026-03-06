@@ -18,6 +18,13 @@
 ///Accesses an associative list, returns null if nothing is found
 #define LAZYACCESSASSOC(L, I, K) L ? L[I] ? L[I][K] ? L[I][K] : null : null : null
 #define LAZYADDASSOCLIST(L, K, V) if(!L) { L = list(); } L[K] += list(V);
+
+///Adds to the item K the value V, if the list is null it will initialize it
+#define LAZYADDASSOC(L, K, V) if(!L) { L = list(); } L[K] += list(V);
+
+///Removes the value V from the item K, if the item K is empty will remove it from the list, if the list is empty will set the list to null
+#define LAZYREMOVEASSOC(L, K, V) if(L) { if(L[K]) { L[K] -= V; if(!length(L[K])) L -= K; } if(!length(L)) L = null; }
+
 #define LAZYOR(L, I) if(!L) { L = list(); } L |= I;
 #define LAZYFIND(L, V) L ? L.Find(V) : 0
 #define LAZYISIN(L, V) L ? (V in L) : FALSE
@@ -654,7 +661,7 @@
 	var/list/out = list()
 	for(var/key in L)
 		out[key] = ceil(L[key])
-	. = out 
+	. = out
 
 /proc/assoc_list_strip_value(list/input)
 	var/list/ret = list()
@@ -752,3 +759,101 @@ GLOBAL_LIST_EMPTY(string_lists)
 		return (call(cmp)(L[i],A) > 0) ? i : i+1
 	else
 		return i
+/// Runtimes if the passed in list is not sorted
+/proc/assert_sorted(list/list, name, cmp = /proc/cmp_numeric_asc)
+	var/last_value = list[1]
+
+	for (var/index in 2 to list.len)
+		var/value = list[index]
+
+		if (call(cmp)(value, last_value) < 0)
+			stack_trace("[name] is not sorted. value at [index] ([value]) is in the wrong place compared to the previous value of [last_value] (when compared to by [cmp])")
+
+		last_value = value
+
+/**
+ * Returns a newline-separated list that counts equal-ish items, outputting count and item names, optionally with icons.
+ */
+/proc/counting_english_list(var/list/input, output_icons = TRUE, nothing_text = "nothing", line_prefix = "\t", first_item_prefix = "\n", last_item_suffix = "\n", and_text = "\n", comma_text = "\n", final_comma_text = "")
+	// Counted input items.
+	var/list/counts = list()
+	// Actual objects for later reference (for icons and formatting).
+	var/list/items = list()
+	// Count items.
+	for(var/item in input)
+		// Index items by name; usually works fairly well for loose equality.
+		var/name = "[item]"
+		if(name in counts)
+			counts[name]++
+		else
+			counts[name] = 1
+			items.Add(item)
+
+	// Assemble the output list.
+	var/list/out = list()
+	var/i = 0
+	for(var/item in items)
+		var/name = "[item]"
+		var/count = counts[name]
+		var/item_str = line_prefix
+
+		if(count > 1)
+			item_str += "[count]x&nbsp;"
+
+		// Atoms use special string conversion rules.
+		if(isatom(item))
+			// atoms/items/objects can be pretty and whatnot.
+			var/atom/A = item
+			// Mobs tend to have unusable icons.
+			if(output_icons && isicon(A.icon) && !ismob(A))
+				item_str += "[icon2html(A, viewers(get_turf(A)))]&nbsp;"
+			item_str += name
+
+		if(i == 0)
+			item_str = first_item_prefix + item_str
+		if(i == items.len - 1)
+			item_str = item_str + last_item_suffix
+
+		out.Add(item_str)
+		i++
+
+	// Finally return the list using regular english_list builder.
+	return english_list(out, nothing_text, and_text, comma_text, final_comma_text)
+
+/// Converts a bitfield to a list of numbers (or words if a wordlist is provided)
+/proc/bitfield_to_list(bitfield = 0, list/wordlist)
+	var/list/return_list = list()
+	if(islist(wordlist))
+		var/max = min(wordlist.len, 24)
+		var/bit = 1
+		for(var/i in 1 to max)
+			if(bitfield & bit)
+				return_list += wordlist[i]
+			bit = bit << 1
+	else
+		for(var/bit_number = 0 to 23)
+			var/bit = 1 << bit_number
+			if(bitfield & bit)
+				return_list += bit
+
+	return return_list
+/* 
+Port of: https://github.com/Monkestation/Vanderlin/commit/84b8b6a716a80040145bb9372641084b32708923 by Sutures / noelle-lavenza
+// A wrapper for baseturf string lists, to offer support of non list values, and a stack_trace if we have major issues
+*/
+/proc/baseturfs_string_list(list/values, turf/baseturf_holder)
+	if(!islist(values))
+		return values //baseturf things
+	// return values
+	if(length(values) > 10)
+		stack_trace("The baseturfs list of [baseturf_holder] at [baseturf_holder.x], [baseturf_holder.y], [baseturf_holder.z] is [length(values)], it should never be this long, investigate. I've set baseturfs to a flashing wall as a visual queue")
+		baseturf_holder.ChangeTurf(/turf/closed/indestructible/baseturfs_ded, list(/turf/closed/indestructible/baseturfs_ded), flags = CHANGETURF_FORCEOP)
+		return string_list(list(/turf/closed/indestructible/baseturfs_ded)) //I want this reported god damn it
+
+	return string_list(values)
+
+/turf/closed/indestructible/baseturfs_ded
+	name = "Report this"
+	desc = "It looks like base turfs went to the fucking moon, TELL YOUR LOCAL CODER TODAY"
+	icon = 'icons/turf/debug.dmi'
+	icon_state = "debug_turf"

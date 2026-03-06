@@ -25,7 +25,7 @@
 
 /mob/proc/adjust_skillrank_down_to(skill, amt, silent = FALSE)
 	return ensure_skills().adjust_skillrank_down_to(skill, amt, silent)
-	
+
 /mob/proc/print_levels()
 	return ensure_skills().print_levels(src)
 
@@ -68,7 +68,7 @@
 
 /datum/skill_holder/proc/set_current(mob/incoming)
 	current = incoming
-	RegisterSignal(incoming, COMSIG_MIND_TRANSFER, PROC_REF(transfer_skills))
+	RegisterSignal(incoming, COMSIG_MIND_TRANSFER, PROC_REF(transfer_skills),override = TRUE)
 	incoming.skills = src
 
 /datum/skill_holder/proc/transfer_skills(mob/source, mob/destination)
@@ -112,7 +112,7 @@
 		if(known_skills[S] > old_level)
 			to_chat(current, span_nicegreen("My [S.name] grows to [SSskills.level_names[known_skills[S]]]!"))
 			if(!COOLDOWN_FINISHED(src, level_up))
-				if(current.client?.prefs.floating_text_toggles & XP_TEXT)
+				if(current.client?.prefs.combat_toggles & XP_TEXT)
 					current.balloon_alert(current, "<font color = '#9BCCD0'>Level up...</font>")
 				current.playsound_local(current, pick(LEVEL_UP_SOUNDS), 100, TRUE)
 				COOLDOWN_START(src, level_up, XP_SHOW_COOLDOWN)
@@ -134,7 +134,7 @@
 
 /datum/skill_holder/proc/adjust_skillrank_down_to(skill, amt, silent = FALSE)
 	var/proper_amt = get_skill_level(skill) - amt
-	if(proper_amt >= 0)
+	if(proper_amt <= 0)
 		return
 	adjust_skillrank(skill, -proper_amt, silent)
 
@@ -249,9 +249,12 @@
 
 /datum/skill_holder/proc/get_skill_level(skill)
 	var/datum/skill/S = GetSkillRef(skill)
+	var/modifier = 0
+	if(S?.abstract_type in list(/datum/skill/labor, /datum/skill/craft))
+		modifier = current?.get_inspirational_bonus()
 	if(!(S in known_skills))
 		return SKILL_LEVEL_NONE
-	return known_skills[S] || SKILL_LEVEL_NONE
+	return known_skills[S] + modifier || SKILL_LEVEL_NONE
 
 /datum/skill_holder/proc/print_levels(user)
 	var/list/shown_skills = list()
@@ -273,3 +276,13 @@
 	msg += "</span>"
 
 	to_chat(user, msg)
+
+/mob/proc/get_inspirational_bonus()
+	return 0
+
+/mob/living/carbon/get_inspirational_bonus()
+	var/bonus = 0
+	for(var/event_type in stressors)
+		var/datum/stressevent/event = stressors[event_type]
+		bonus += event.quality_modifier
+	return bonus

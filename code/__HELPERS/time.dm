@@ -27,23 +27,24 @@ GLOBAL_LIST_INIT(time_change_tips, world.file2list("strings/rt/timechangetips.tx
 GLOBAL_VAR_INIT(tod, FALSE)
 GLOBAL_VAR_INIT(forecast, FALSE)
 GLOBAL_VAR_INIT(todoverride, FALSE)
-GLOBAL_VAR_INIT(dayspassed, FALSE)
+GLOBAL_VAR_INIT(dayspassed, 0)
+
+GLOBAL_VAR_INIT(date_override_enabled, FALSE)
+GLOBAL_VAR_INIT(date_override_day, 1)
+GLOBAL_VAR_INIT(date_override_month, 1)
+GLOBAL_VAR_INIT(date_override_offset, 0)
 
 /proc/settod()
 	var/time = station_time()
 	var/oldtod = GLOB.tod
 	if(time >= SSnightshift.nightshift_start_time || time <= SSnightshift.nightshift_dawn_start)
 		GLOB.tod = "night"
-//		testing("set [tod]")
 	if(time > SSnightshift.nightshift_dawn_start && time <= SSnightshift.nightshift_day_start)
 		GLOB.tod = "dawn"
-//		testing("set [tod]")
 	if(time > SSnightshift.nightshift_day_start && time <= SSnightshift.nightshift_dusk_start)
 		GLOB.tod = "day"
-//		testing("set [tod]")
 	if(time > SSnightshift.nightshift_dusk_start && time <= SSnightshift.nightshift_start_time)
 		GLOB.tod = "dusk"
-//		testing("set [tod]")
 	if(GLOB.todoverride)
 		GLOB.tod = GLOB.todoverride
 	if((GLOB.tod != oldtod) && !GLOB.todoverride && (GLOB.dayspassed>1)) //weather check on tod changes
@@ -51,31 +52,47 @@ GLOBAL_VAR_INIT(dayspassed, FALSE)
 			switch(GLOB.tod)
 				if("dawn")
 					if(prob(25))
-						GLOB.forecast = "rain"
+						GLOB.forecast = PARTICLEWEATHER_RAIN
+					if(prob(20) && (SSgamemode.current_storyteller.name == "Eora"))
+						GLOB.forecast = PARTICLEWEATHER_SAKURA
 				if("day")
-					if(prob(5))
-						GLOB.forecast = "rain"
+					if(prob(20))
+						GLOB.forecast = PARTICLEWEATHER_RAIN
+					if(prob(30))
+						GLOB.forecast = PARTICLEWEATHER_LEAVES
+					if(prob(20) && (SSgamemode.current_storyteller.name == "Eora"))
+						GLOB.forecast = PARTICLEWEATHER_SAKURA
 				if("dusk")
-					if(prob(33))
-						GLOB.forecast = "rain"
+					if(prob(30))
+						GLOB.forecast = PARTICLEWEATHER_RAIN
+					if(prob(20))
+						GLOB.forecast = PARTICLEWEATHER_LEAVES
 				if("night")
 					if(prob(40))
-						GLOB.forecast = "rain"
+						GLOB.forecast = PARTICLEWEATHER_RAIN
+					if(prob(20))
+						GLOB.forecast = PARTICLEWEATHER_LEAVES
+					if(prob(40) && (SSgamemode.current_storyteller.name == "Zizo" || SSgamemode.current_storyteller.name == "Graggar"))
+						GLOB.forecast = PARTICLEWEATHER_BLOODRAIN
+			if(GLOB.forecast != SSParticleWeather?.runningWeather?.target_trait)
+				switch(GLOB.forecast)
+					if(PARTICLEWEATHER_RAIN)
+						SSParticleWeather?.run_weather(pick(/datum/particle_weather/rain_gentle, /datum/particle_weather/rain_storm,/datum/particle_weather/fog,/datum/particle_weather/fog/swamp))
+					if(PARTICLEWEATHER_LEAVES)
+						SSParticleWeather?.run_weather(pick(/datum/particle_weather/leaves_gentle, /datum/particle_weather/leaves_storm))
+					if(PARTICLEWEATHER_BLOODRAIN)
+						SSParticleWeather?.run_weather(pick(/datum/particle_weather/blood_rain_gentle, /datum/particle_weather/blood_rain_storm))
+					if(PARTICLEWEATHER_SAKURA)
+						SSParticleWeather?.run_weather(pick(/datum/particle_weather/sakura_gentle, /datum/particle_weather/sakura_storm))
 
-			if(GLOB.forecast == "rain")
-				var/foundnd
-				if(SSParticleWeather?.runningWeather?.target_trait == PARTICLEWEATHER_RAIN)
-					foundnd = TRUE
-				if(!foundnd)
-					SSParticleWeather?.run_weather(pick(/datum/particle_weather/rain_gentle, /datum/particle_weather/rain_storm))
 		else
 			switch(GLOB.forecast) //end the weather now
-				if("rain")
+				if(PARTICLEWEATHER_RAIN)
 					if(GLOB.tod == "day")
-						GLOB.forecast = "rainbow"
+						GLOB.forecast = PARTICLEWEATHER_LEAVES
 					else
 						GLOB.forecast = null
-				if("rainbow")
+				if(PARTICLEWEATHER_LEAVES)
 					GLOB.forecast = null
 
 	if(GLOB.tod != oldtod)
@@ -84,6 +101,8 @@ GLOBAL_VAR_INIT(dayspassed, FALSE)
 			if(GLOB.dayspassed == 8)
 				GLOB.dayspassed = 1
 			SStreasury.distribute_estate_incomes()
+			SStreasury.distribute_daily_payments()
+			SStreasury.distribute_interest()
 		for(var/mob/living/player in GLOB.mob_list)
 			if(player.stat != DEAD && player.client)
 				player.do_time_change()
@@ -91,7 +110,7 @@ GLOBAL_VAR_INIT(dayspassed, FALSE)
 	if(GLOB.tod)
 		return GLOB.tod
 	else
-		testing("COULDNT FIND TOD [GLOB.tod] .. [time]")
+
 		return null
 
 /mob/living/proc/do_time_change()
@@ -102,7 +121,8 @@ GLOBAL_VAR_INIT(dayspassed, FALSE)
 		return
 	if(GLOB.tod == "dawn")
 		var/text_to_show
-		switch(GLOB.dayspassed)
+		var/day_number = get_current_day_of_week()
+		switch(day_number)
 			if(1)
 				text_to_show = "DAWN OF THE FIRST DAE\nMOON'S DAE"
 			if(2)
@@ -110,7 +130,7 @@ GLOBAL_VAR_INIT(dayspassed, FALSE)
 			if(3)
 				text_to_show = "DAWN OF THE THIRD DAE\nWEDDING'S DAE"
 			if(4)
-				text_to_show = "DAWN OF THE FOURTH DAE\nTHULE'S DAE"
+				text_to_show = "DAWN OF THE FOURTH DAE\nTOLL'S DAE"
 			if(5)
 				text_to_show = "DAWN OF THE FIFTH DAE\nFREYJA'S DAE"
 			if(6)

@@ -69,19 +69,19 @@
 		needed_xp += needed_xp_for_level(next_skill_level)
 	return needed_xp
 
-/datum/sleep_adv/proc/add_sleep_experience(skill, amt, silent = FALSE)
+/datum/sleep_adv/proc/add_sleep_experience(skill, amt, silent = FALSE, _show_xp = TRUE)
 	var/mob/living/L = mind.current
-	var/show_xp = TRUE
-	if(!(L.client?.prefs.floating_text_toggles & XP_TEXT))
+	var/show_xp = _show_xp
+	if(!(L.client?.prefs.combat_toggles & XP_TEXT))
 		show_xp = FALSE
-	if((L.get_skill_level(skill) < SKILL_LEVEL_APPRENTICE) && !is_considered_sleeping())
+	if((L.get_skill_level(skill) < SKILL_LEVEL_APPRENTICE) && (!is_considered_sleeping()|| HAS_TRAIT(mind.current, TRAIT_VAMP_DREAMS)))
 		var/org_lvl = L.get_skill_level(skill)
 		L.adjust_experience(skill, amt)
 		var/new_lvl = L.get_skill_level(skill)
 		var/capped_post_check = enough_sleep_xp_to_advance(skill, 2)
 		if(COOLDOWN_FINISHED(src, xp_show))
 			if(org_lvl == new_lvl && !capped_post_check && show_xp)
-				L.balloon_alert(L, "[amt] XP")
+				L.balloon_alert(L, "[round(amt, 0.1)] XP")
 				COOLDOWN_START(src, xp_show, XP_SHOW_COOLDOWN)
 		return
 	var/datum/skill/skillref = GetSkillRef(skill)
@@ -93,12 +93,22 @@
 			trait_capped_level = skillref.trait_uncap[trait]
 	#endif
 	#ifndef USES_TRAIT_SKILL_GATING
-		trait_capped_level = SKILL_LEVEL_LEGENDARY
+	trait_capped_level = SKILL_LEVEL_LEGENDARY
 	#endif
 
 	// Using this prevent a bug where you can bank xp to go one beyond cap
 	if(trait_capped_level && enough_sleep_xp_to_advance(skill, trait_capped_level - mind.current.get_skill_level(skill)))
 		amt = 0
+
+		// Notifying you on a cooldown if you actually hit the cap
+		var/skillname = skillref.name ? skillref.name : "ERROR"
+		var/captimer = LAZYACCESS(L.mob_timers, "skillcap_[skillname]")
+
+		if(!captimer || world.time > (captimer + SKILLCAP_NOTIF_COOLDOWN))
+			L.mob_timers["skillcap_[skillname]"] = world.time
+			to_chat(L, span_warning("I can't learn anything more about [skillname]."))
+			if(show_xp)
+				L.balloon_alert(L, "<font color = '#bb2b2b'>Skill cap!</font>")
 
 	var/capped_pre = enough_sleep_xp_to_advance(skill, 2)
 	var/can_advance_pre = enough_sleep_xp_to_advance(skill, 1)
@@ -116,7 +126,7 @@
 			"[skillref.name] starts making more sense to me...",
 		))))
 		if(!COOLDOWN_FINISHED(src, level_up))
-			if((L.client?.prefs.floating_text_toggles & XP_TEXT))
+			if((L.client?.prefs.combat_toggles & XP_TEXT))
 				L.balloon_alert(L, "<font color = '#9BCCD0'>Level up...</font>")
 			L.playsound_local(L, pick(LEVEL_UP_SOUNDS), 100, TRUE)
 			COOLDOWN_START(src, level_up, XP_SHOW_COOLDOWN)
@@ -126,14 +136,14 @@
 			"My [lowertext(skillref.name)] can no longer improve without some rest and meditation...",
 		))))
 		if(!COOLDOWN_FINISHED(src, level_up))
-			if((L.client?.prefs.floating_text_toggles & XP_TEXT))
+			if((L.client?.prefs.combat_toggles & XP_TEXT))
 				L.balloon_alert(L, "<font color = '#9BCCD0'>Level up...</font>")
 			L.playsound_local(L, pick(LEVEL_UP_SOUNDS), 100, TRUE)
 			COOLDOWN_START(src, level_up, XP_SHOW_COOLDOWN)
 		show_xp = FALSE
 	if(COOLDOWN_FINISHED(src, xp_show))
-		if(amt && show_xp && (L.client?.prefs.floating_text_toggles & XP_TEXT))
-			L.balloon_alert(L, "[amt] XP")
+		if(amt && show_xp && (L.client?.prefs.combat_toggles & XP_TEXT))
+			L.balloon_alert(L, "[round(amt, 0.1)] XP")
 			COOLDOWN_START(src, xp_show, XP_SHOW_COOLDOWN)
 
 /datum/sleep_adv/proc/advance_cycle()
@@ -217,13 +227,14 @@
 /datum/sleep_adv/proc/process_sleep()
 	if(is_considered_sleeping())
 		return
+	if(mind.current.eyesclosed)
+		return
 	close_ui()
 
 /datum/sleep_adv/proc/is_considered_sleeping()
 	if(!mind.current)
 		return FALSE
-	var/has_vamp_trait = HAS_TRAIT(mind.current, TRAIT_VAMP_DREAMS)
-	if(has_vamp_trait)
+	if(HAS_TRAIT(mind?.current, TRAIT_VAMP_DREAMS))
 		return TRUE
 	if(mind.current.IsSleeping())
 		return TRUE
@@ -261,11 +272,11 @@
 	var/dream_text = skill.get_random_dream()
 	if(dream_text)
 		to_chat(mind.current, span_notice(dream_text))
-	
+
 	// Notify player if they're benefiting from Malum's blessing for craft skills or sewing
 	if(HAS_TRAIT(mind.current, TRAIT_FORGEBLESSED) && (istype(skill, /datum/skill/craft) || istype(skill, /datum/skill/craft/sewing)))
 		to_chat(mind.current, span_notice("Malum's blessing reduces the dream point cost of your crafting training."))
-	
+
 	sleep_adv_points -= get_skill_cost(skill_type)
 	adjust_sleep_xp(skill_type, -get_requried_sleep_xp_for_skill(skill_type, 1))
 	mind.current.adjust_skillrank(skill_type, 1, FALSE)
@@ -329,6 +340,12 @@
 		mind.RemoveSpell(mind.rituos_spell)
 		mind.rituos_spell = null
 	to_chat(mind.current, span_notice("...and that's all I dreamt of."))
+	if(HAS_TRAIT(mind.current, TRAIT_STUDENT))
+		REMOVE_TRAIT(mind.current, TRAIT_STUDENT, TRAIT_GENERIC)
+		to_chat(mind.current, span_smallnotice("I feel that I can be educated in a skill once more."))
+	if(HAS_TRAIT(mind.current, TRAIT_EXPLOSIVE_SUPPLY))
+		mind.has_bomb = TRUE
+		to_chat(mind.current, span_smallnotice("I need to check on HERMES. I think a new package has arrived."))
 	close_ui()
 
 /datum/sleep_adv/Topic(href, list/href_list)
@@ -336,7 +353,7 @@
 	if(!mind.current)
 		close_ui()
 		return
-	if(!is_considered_sleeping())
+	if(!mind.current.eyesclosed)
 		close_ui()
 		return
 	switch(href_list["task"])

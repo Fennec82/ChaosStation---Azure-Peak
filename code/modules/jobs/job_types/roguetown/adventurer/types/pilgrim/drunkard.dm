@@ -5,13 +5,12 @@
 	allowed_races = RACES_ALL_KINDS
 	outfit = /datum/outfit/job/roguetown/adventurer/drunkard
 	traits_applied = list(TRAIT_HOMESTEAD_EXPERT)
-	
+
 	category_tags = list(CTAG_TOWNER)
 	subclass_stats = list(
-		STATKEY_FOR = 2,
+		STATKEY_LCK = 2,
 		STATKEY_CON = 1,
 		STATKEY_STR = 1,
-		STATKEY_INT = -2
 	)
 	subclass_skills = list(
 		/datum/skill/misc/stealing = SKILL_LEVEL_JOURNEYMAN,
@@ -22,6 +21,7 @@
 		/datum/skill/misc/climbing = SKILL_LEVEL_APPRENTICE, //Climbing into windows to steal drugs or booze.
 		/datum/skill/misc/reading = SKILL_LEVEL_NOVICE,
 	)
+	maximum_possible_slots = 20 // Should not fill, just a hack to make it shows what types of towners are in round
 
 /datum/outfit/job/roguetown/adventurer/drunkard/pre_equip(mob/living/carbon/human/H)
 	..()
@@ -37,9 +37,12 @@
 	beltl = /obj/item/flint
 	backpack_contents = list(
 						/obj/item/storage/pill_bottle/dice = 1,
+						/obj/item/storage/pill_bottle/dice/farkle = 1,
+						/obj/item/reagent_containers/glass/cup = 1,
 						/obj/item/toy/cards/deck = 1,
 						/obj/item/reagent_containers/glass/bottle/rogue/wine = 1,
 						/obj/item/flashlight/flare/torch = 1,
 						)
-	if(H.patron.type == /datum/patron/divine/xylix)
-		ADD_TRAIT(H, TRAIT_CRACKHEAD, TRAIT_GENERIC)
+	ADD_TRAIT(H, TRAIT_CRACKHEAD, TRAIT_GENERIC)
+	if(H.mind)
+		SStreasury.give_money_account(ECONOMIC_LETSGOGAMBLING, H, "Savings.")

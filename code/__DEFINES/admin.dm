@@ -78,6 +78,7 @@
 #define ADMIN_PUNISHMENT_NECKSNAP "Snap Neck"
 #define ADMIN_PUNISHMENT_LIAM "Trey Liam'd"
 #define ADMIN_PUNISHMENT_DIVINE_WRATH "Divine Wrath"
+#define ADMIN_PUNISHMENT_CHANDELIER "Chandelier'd"
 
 #define AHELP_ACTIVE 1
 #define AHELP_CLOSED 2
@@ -102,3 +103,6 @@
 
 //How many things you can spawn at once with spawn verb/create panel
 #define ADMIN_SPAWN_CAP 100
+
+// List of curses
+#define CURSE_MASTER_LIST list("brokedick")

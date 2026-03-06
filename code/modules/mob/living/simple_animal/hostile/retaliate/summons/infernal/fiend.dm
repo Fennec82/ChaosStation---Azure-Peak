@@ -1,6 +1,8 @@
 /mob/living/simple_animal/hostile/retaliate/rogue/infernal/fiend
 	icon = 'icons/mob/summonable/32x32.dmi'
 	name = "fiend"
+	desc = "A much larger relative of the common infernal imp, this otherworldly creature stands to an impressive height \
+	and breadth. Whenever it ceases to move its body freezes to a complete standstill, as if it were a gargoyle."
 	icon_state = "fiend"
 	icon_living = "fiend"
 	icon_dead = "vvd"
@@ -37,7 +39,8 @@
 	STASPD = 8
 	simple_detect_bonus = 20
 	deaggroprob = 0
-	defprob = 40
+	canparry = TRUE
+	defprob = 50
 	// del_on_deaggro = 44 SECONDS
 	retreat_health = 0.3
 	food = 0
@@ -52,6 +55,10 @@
 	var/summon_cd = 0
 	inherent_spells = list(/obj/effect/proc_holder/spell/self/call_infernals,
 	/obj/effect/proc_holder/spell/invoked/fiend_meteor)
+
+/mob/living/simple_animal/hostile/retaliate/rogue/infernal/fiend/Initialize()
+	. = ..()
+	ADD_TRAIT(src, TRAIT_SILVER_WEAK, TRAIT_GENERIC)
 
 /mob/living/simple_animal/hostile/retaliate/rogue/infernal/fiend/death(gibbed)
 	..()

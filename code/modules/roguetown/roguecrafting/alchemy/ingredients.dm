@@ -4,7 +4,7 @@
 	icon = 'icons/roguetown/misc/alchemy.dmi'
 	icon_state = "irondust"
 	w_class = WEIGHT_CLASS_TINY
-	experimental_inhand = FALSE
+	experimental_inhand = TRUE
 	/*
 		So, you're here about potions: TLDR - the cauldron takes up to 4 items, from this, makes 1 recipe. Major gives 3 points, med 2 points,minor 1 point.
 		If no recipe gets above 5 points, it makes nothing,otherwise It then makes the recipe with the HIGHEST POINTS.
@@ -65,10 +65,15 @@
 					. += span_notice(" Smells weakly of [minor_smell].")
 /obj/item/alch/viscera
 	name = "viscera"
+	desc = "Butchered entrails. Quite useful for alchemy, if a little unappealing to handle."
 	icon_state = "viscera"
 	major_pot = /datum/alch_cauldron_recipe/big_health_potion
 	med_pot = /datum/alch_cauldron_recipe/health_potion
 	minor_pot = /datum/alch_cauldron_recipe/antidote
+
+/obj/item/alch/viscera/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Viscera is chiefly obtained by butchering most animals. To butcher an animal, middle-click it with a knife without any miracles, spells, or special intents selected. The higher your Butchering skill, the more you'll carve.")
 
 /obj/item/alch/waterdust
 	name = "water essentia"
@@ -128,11 +133,16 @@
 
 /obj/item/alch/sinew
 	name = "sinew"
+	desc = "The sinew of an animal, pulled out of said animal. Has some alchemical uses."
 	icon_state = "sinew"
 	dropshrink = 0.9
 	major_pot = /datum/alch_cauldron_recipe/stam_poison
 	med_pot = /datum/alch_cauldron_recipe/end_potion
 	minor_pot = /datum/alch_cauldron_recipe/health_potion
+
+/obj/item/alch/sinew/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Sinew is chiefly obtained by butchering most animals. To butcher an animal, middle-click it with a knife without any miracles, spells, or special intents selected. The higher your Butchering skill, the more you'll carve.")
 
 /obj/item/alch/irondust
 	name = "iron dust"
@@ -183,6 +193,10 @@
 	med_pot = /datum/alch_cauldron_recipe/health_potion
 	minor_pot = /datum/alch_cauldron_recipe/con_potion
 
+/obj/item/alch/bone/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Tailbones are chiefly obtained by butchering most animals. To butcher an animal, middle-click it with a knife without any miracles, spells, or special intents selected. The higher your Butchering skill, the more you'll carve.")
+
 /obj/item/alch/horn
 	name = "troll horn"
 	icon_state = "horn"
@@ -196,6 +210,10 @@
 	major_pot = /datum/alch_cauldron_recipe/str_potion
 	med_pot = /datum/alch_cauldron_recipe/con_potion
 	minor_pot = /datum/alch_cauldron_recipe/end_potion
+
+/obj/item/alch/horn/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("These horns are chiefly obtained by butchering trolls. To butcher an animal, middle-click it with a knife without any miracles, spells, or special intents selected. The higher your Butchering skill, the more you'll carve.")
 
 /obj/item/alch/golddust
 	name = "gold dust"
@@ -290,7 +308,8 @@
 
 /obj/item/alch/berrypowder
 	name = "berry powder"
-	desc = "Berries ground and dried into a soft fragrant powder."
+	desc = "Berries ground and dried into a soft, fragrant powder. It'd probably \
+	make you sneeze if you accidentally inhaled any."
 	icon_state = "berrypowder"
 
 	major_pot = /datum/alch_cauldron_recipe/berrypoison
@@ -310,6 +329,11 @@
 /obj/item/alch/matricaria
 	name = "matricaria"
 	icon_state = "matricaria"
+	mob_overlay_icon = 'icons/roguetown/clothing/onmob/head_items.dmi'
+	slot_flags = ITEM_SLOT_HEAD|ITEM_SLOT_MASK
+	body_parts_covered = NONE
+	w_class = WEIGHT_CLASS_TINY
+	alternate_worn_layer  = 8.9 //On top of helmet
 
 	major_pot = /datum/alch_cauldron_recipe/berrypoison
 	med_pot = /datum/alch_cauldron_recipe/per_potion
@@ -350,6 +374,11 @@
 /obj/item/alch/calendula
 	name = "calendula"
 	icon_state = "calendula"
+	mob_overlay_icon = 'icons/roguetown/clothing/onmob/head_items.dmi'
+	slot_flags = ITEM_SLOT_HEAD|ITEM_SLOT_MASK
+	body_parts_covered = NONE
+	w_class = WEIGHT_CLASS_TINY
+	alternate_worn_layer  = 8.9 //On top of helmet
 
 	major_pot = /datum/alch_cauldron_recipe/big_health_potion
 	med_pot = /datum/alch_cauldron_recipe/end_potion

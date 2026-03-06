@@ -1,7 +1,7 @@
 #define PILLORY_HEAD_OFFSET      2 // How much we need to move the player to center their head
 
 /obj/structure/pillory
-	name = "Pillory"
+	name = "pillory"
 	desc = "To keep the criminals locked!"
 	icon_state = "pillory_single"
 	icon = 'modular/icons/obj/pillory.dmi'
@@ -18,6 +18,11 @@
 	var/base_icon = "pillory_single"
 	var/list/lockid = list()
 
+/obj/structure/pillory/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Right clicking the pillory will latch it onto the head and hands of anyone on the same turf.")
+	. += span_info("Left clicking the pillory with a compatible key or keychain, provided somebody is already latched to it, will lock the pillory!")
+
 /obj/structure/pillory/double
 	icon_state = "pillory_double"
 	base_icon = "pillory_double"
@@ -26,18 +31,8 @@
 	icon_state = "pillory_reinforced"
 	base_icon = "pillory_reinforced"
 
-/obj/structure/pillory/town_square
-	lockid = list("keep_dungeon", "keep_barracks", "town_dungeon", "town_barracks", "bog_dungeon", "bog_barracks", "church")
-
-/obj/structure/pillory/reinforced/keep_dungeon
-	lockid = list("keep_dungeon")
-
-/obj/structure/pillory/reinforced/town_dungeon
-	lockid = list("town_dungeon")
-
-/obj/structure/pillory/reinforced/bog_dungeon
-	lockid = list("bog_dungeon")
-
+/obj/structure/pillory/town
+	lockid = list("dungeon", "garrison", "walls", "church", "inquisition", "manor")
 
 /obj/structure/pillory/Initialize()
 	LAZYINITLIST(buckled_mobs)
@@ -66,9 +61,11 @@
 	if(user in buckled_mobs)
 		to_chat(user, span_warning("I can't reach the lock!"))
 		return
+
 	if(!latched)
 		to_chat(user, span_warning("It's not latched shut!"))
 		return
+
 	if(istype(P, /obj/item/roguekey))
 		var/obj/item/roguekey/K = P
 		if(K.lockid in lockid)
@@ -78,9 +75,13 @@
 			to_chat(user, span_warning("Wrong key."))
 			playsound(src, 'sound/foley/doors/lockrattle.ogg', 100)
 			return
+
 	if(istype(P, /obj/item/storage/keyring))
-		var/obj/item/storage/keyring/K = P
-		for(var/obj/item/roguekey/KE in K.keys)
+		var/obj/item/storage/keyring/R = P
+		if(!R.contents.len)
+			return
+		var/list/keys = R.contents.Copy()
+		for(var/obj/item/roguekey/KE in keys)
 			if(KE.lockid in lockid)
 				togglelock(user)
 				return
@@ -162,15 +163,31 @@
 	..()
 
 /obj/structure/pillory/user_unbuckle_mob(mob/living/buckled_mob, mob/user)
-	if(user != buckled_mob || !latched)
+	if(!latched)
 		return ..()
-	if(buckled_mob.STASTR >= 18)
-		if(do_after(buckled_mob, 2.5 SECONDS))
-			buckled_mob.visible_message(span_warning("[buckled_mob] breaks [src] open!"))
-			locked = FALSE
-			latched = FALSE
-			return ..()
+	if(buckled_mob == user)
+		if(buckled_mob.STASTR >= 18)
+			if(do_after(buckled_mob, 2.5 SECONDS))
+				buckled_mob.visible_message(span_warning("[buckled_mob] breaks [src] open!"))
+				locked = FALSE
+				latched = FALSE
+				return ..()
+			return null
+		if(locked)	//can't be locked without also being latched anyway
+			to_chat(user, span_warning("It's locked! I can't free myself!"))
+			return
+		else if(latched)
+			buckled_mob.visible_message(span_warning("[buckled_mob] struggles in [src], trying to get the latch off!"))
+			if(do_after(buckled_mob, 12 SECONDS))
+				buckled_mob.visible_message(span_warning("[buckled_mob] forces [src]'s latch open!"))
+				latched = FALSE
+				return ..()
+			else
+				return null
+	if(locked)	//if user isn't the one in the pillory and it's also locked
+		to_chat(user, span_warning("[src] is locked! I'll need a key to unlatch it."))
 		return null
+	latched = FALSE //we pull them free, which implies unlatching
 	return ..()
 
 /obj/structure/pillory/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum, damage_flag)

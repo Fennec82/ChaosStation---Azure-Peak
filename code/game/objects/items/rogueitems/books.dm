@@ -124,7 +124,7 @@
 			return
 		var/picked_cat = input(user, "Categories", "Shipping Ledger") as null|anything in sortList(SSmerchant.supply_cats)
 		if(!picked_cat)
-			testing("yeye")
+
 			return
 		var/list/pax = list()
 		for(var/pack in SSmerchant.supply_packs)
@@ -175,7 +175,7 @@
 	title = "The Verses and Acts of the Ten"
 	dat = "gott.json"
 	possible_item_intents = list(
-		/datum/intent/use, 
+		/datum/intent/use,
 		/datum/intent/bless,
 	)
 
@@ -236,6 +236,12 @@
 		else
 			to_chat(user, span_info("It has already been blessed."))
 			return
+
+/obj/item/book/rogue/bibble/get_mechanics_examine(mob/user)
+    . = ..()
+    . += span_info("Exclusive to the Bishop is the ability to anoint items and people, by left-clicking the chosen recipient.")
+    . += span_info("Anointing a silver weapon will bless it, greatly increasing the power of its critical hits and debuffs against sunderable opponents.")
+    . += span_info("Anointing a person will bless them, imparting a temporary bonus to their Fortune.")
 
 /obj/item/book/rogue/bibble/psy
 	name = "Tome of Psydon"
@@ -338,16 +344,16 @@
 /obj/item/book/rogue/secret/thefireisgone
 	name = "THE FIRE IS GONE"
 	desc = "{<font color='red'><blink>AN ANCIENT TOME WRITTEN BY THE GODS' GREATEST FOOL</blink></font>}"
-	icon_state ="book6_0"
-	base_icon_state = "book6"
+	icon_state ="book7_0"
+	base_icon_state = "book7"
 	bookfile = "thefireisgone.json"
 
-/obj/item/book/rogue/blackoak
-	name = "The Noblest Struggle"
-	desc = "A small black book. All Black Oaks carry this close."
-	icon_state ="book_0"
-	base_icon_state = "book"
-	bookfile = "blackoak.json"
+/obj/item/book/rogue/secret/dragon_stanza
+	name = "FORGOTTIN JOURNAL"
+	desc = "{<font color='red'><blink>PRIMORDIAL WEALTH.</blink></font>}"
+	icon_state ="book7_0"
+	base_icon_state = "book7"
+	bookfile = "dragonwealth.json"
 
 //player made books
 /obj/item/book/rogue/tales1
@@ -614,6 +620,10 @@
 	var/compiled_pages = null
 	var/list/page_texts = list()
 	var/qdel_source = FALSE
+
+/obj/item/manuscript/examine()
+	. = ..()
+	. += span_info("It has [number_of_pages] pages. Use paper to add more. Finish the book with a book crafting kit.")
 
 /obj/item/manuscript/attackby(obj/item/I, mob/living/user)
 	// why is a book crafting kit using the craft system, but crafting a book isn't? Well the crafting system for *some reason* is made in such a way as to make reworking it to allow you to put reqs vars in the crafted item near *impossible.*

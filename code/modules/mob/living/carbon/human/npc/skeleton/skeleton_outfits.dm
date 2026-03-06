@@ -50,6 +50,13 @@
 			skel_outfit = /datum/outfit/job/roguetown/skeleton/npc/hard
 	..()
 
+// For Tomb of Matthios/Tomb of Alothesos Supreme Difficulty:TM: encounters.
+/mob/living/carbon/human/species/skeleton/npc/special/vile_doctor
+	skel_outfit = /datum/outfit/job/roguetown/skeleton/npc/vile_doctor
+
+/mob/living/carbon/human/species/skeleton/npc/special/disgraced_noble
+	skel_outfit = /datum/outfit/job/roguetown/skeleton/npc/disgraced_noble
+
 /datum/outfit/job/roguetown/skeleton/npc/supereasy/pre_equip(mob/living/carbon/human/H)
 	..()
 	H.STASTR = 10
@@ -89,10 +96,10 @@
 
 /datum/outfit/job/roguetown/skeleton/npc/easy/pre_equip(mob/living/carbon/human/H)
 	..()
-	H.STASTR = 14
+	H.STASTR = 9
 	H.STASPD = 8
 	H.STACON = 4 // Same statblock as before easily killed
-	H.STAWIL = 15
+	H.STAWIL = 12
 	H.STAINT = 1
 	name = "Skeleton Footsoldier"
 	shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/aalloy
@@ -121,10 +128,10 @@
 
 /datum/outfit/job/roguetown/skeleton/npc/pirate/pre_equip(mob/living/carbon/human/H)
 	..()
-	H.STASTR = 14
+	H.STASTR = 9
 	H.STASPD = 8
 	H.STACON = 4 // Same statblock as before easily killed
-	H.STAWIL = 15
+	H.STAWIL = 12
 	H.STAINT = 1
 	name = "Skeleton Pirate"
 	head =  /obj/item/clothing/head/roguetown/helmet/tricorn
@@ -150,21 +157,24 @@
 
 /datum/outfit/job/roguetown/skeleton/npc/medium/pre_equip(mob/living/carbon/human/H)
 	..()
-	H.STASTR = 14
+	H.STASTR = 11
 	H.STASPD = 8
 	H.STACON = 6 // Slightly tougher now!
-	H.STAWIL = 15
+	H.STAWIL = 10
 	H.STAINT = 1
 	name = "Skeleton Soldier"
-	cloak = /obj/item/clothing/cloak/stabard/surcoat/guard // Ooo Spooky Old Dead MAA
+	cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/guard // Ooo Spooky Old Dead MAA
 	head = /obj/item/clothing/head/roguetown/helmet/heavy/aalloy
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/half/aalloy
+	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/aalloy
 	shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/aalloy
 	wrists = /obj/item/clothing/wrists/roguetown/bracers/aalloy
 	pants = /obj/item/clothing/under/roguetown/chainlegs/kilt/aalloy
 	shoes = /obj/item/clothing/shoes/roguetown/boots/aalloy
 	neck = /obj/item/clothing/neck/roguetown/chaincoif/iron/aalloy
 	gloves = /obj/item/clothing/gloves/roguetown/chain/aalloy
+	belt = /obj/item/storage/belt/rogue/leather/rope
+	if(prob(15))
+		beltl = /obj/item/repair_kit/bad
 	if(prob(33)) // 33% chance of shield, so ranged don't get screwed over entirely
 		l_hand = /obj/item/rogueweapon/shield/tower/metal/alloy
 	if(prob(33))
@@ -186,9 +196,9 @@
 
 /datum/outfit/job/roguetown/skeleton/npc/hard/pre_equip(mob/living/carbon/human/H)
 	..()
-	H.STASTR = 14
+	H.STASTR = 12
 	H.STACON = 8 // Woe, actual limb health.
-	H.STAWIL = 15
+	H.STAWIL = 12
 	H.STAINT = 1
 	name = "Skeleton Dreadnought"
 	// This combines the khopesh  and withered dreadknight
@@ -197,7 +207,7 @@
 		H.STASPD = 12 // Hue
 		cloak = /obj/item/clothing/cloak/hierophant
 		mask = /obj/item/clothing/mask/rogue/facemask/aalloy
-		armor = /obj/item/clothing/suit/roguetown/armor/plate/half/aalloy
+		armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/aalloy
 		shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/aalloy
 		wrists = /obj/item/clothing/wrists/roguetown/bracers/aalloy
 		pants = /obj/item/clothing/under/roguetown/platelegs/aalloy
@@ -217,7 +227,94 @@
 		shoes = /obj/item/clothing/shoes/roguetown/boots/aalloy
 		neck = /obj/item/clothing/neck/roguetown/gorget/aalloy
 		gloves = /obj/item/clothing/gloves/roguetown/plate/aalloy
+		belt = /obj/item/storage/belt/rogue/leather
+		if(prob(15))
+			beltl = /obj/item/repair_kit/metal/bad
 		if(prob(50))
 			r_hand = /obj/item/rogueweapon/greatsword/aalloy
 		else
 			r_hand = /obj/item/rogueweapon/mace/goden/aalloy
+	H.adjust_skillrank(/datum/skill/combat/polearms, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/maces, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/axes, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/swords, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/knives, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/shields, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/unarmed, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/wrestling, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/climbing, 4, TRUE)
+
+/datum/outfit/job/roguetown/skeleton/npc/vile_doctor/pre_equip(mob/living/carbon/human/H)
+	..()
+	H.STASTR = 12
+	H.STACON = 11 // Woe, actual limb health.
+	H.STAWIL = 12
+	H.STASPD = 14 // that dagger WILL get thru ur parry.
+	H.STAINT = 1
+	name = "Vile Doctor"
+	mask = /obj/item/clothing/mask/rogue/sack
+	head = /obj/item/clothing/head/roguetown/physician
+	shirt = /obj/item/clothing/suit/roguetown/armor/gambeson
+	armor = /obj/item/clothing/suit/roguetown/shirt/robe/physician
+	pants = /obj/item/clothing/under/roguetown/trou/leather/courtphysician
+	shoes = /obj/item/clothing/shoes/roguetown/boots/leather/reinforced
+	wrists = /obj/item/clothing/wrists/roguetown/bracers/aalloy
+	gloves = /obj/item/clothing/gloves/roguetown/leather/black
+	neck = /obj/item/clothing/neck/roguetown/chaincoif/iron/aalloy
+	r_hand = /obj/item/rogueweapon/huntingknife/idagger/steel/rondel
+	H.adjust_skillrank(/datum/skill/combat/polearms, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/maces, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/axes, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/swords, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/knives, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/shields, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/unarmed, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/wrestling, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/climbing, 4, TRUE)
+
+/datum/outfit/job/roguetown/skeleton/npc/disgraced_noble/pre_equip(mob/living/carbon/human/H)
+	..()
+	H.STASTR = 12 // stabs quick, stabs strong.
+	H.STACON = 11
+	H.STAWIL = 12
+	H.STASPD = 12
+	H.STAINT = 1
+	name = "Disgraced Ancient Noble"
+	var/skeletonclass = rand(0,2) // lets shake it up a little :3
+	belt = /obj/item/storage/belt/rogue/leather/black
+	shoes = /obj/item/clothing/shoes/roguetown/boots/nobleboot
+	l_hand = /obj/item/rogueweapon/sword/rapier/dec
+	pants = /obj/item/clothing/under/roguetown/platelegs/aalloy
+	armor = /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/aalloy/heavy
+	wrists = /obj/item/clothing/wrists/roguetown/bracers/aalloy
+	head = /obj/item/clothing/head/roguetown/chaperon/noble/evil
+	cloak = /obj/item/clothing/cloak/half/red
+	neck = /obj/item/clothing/neck/roguetown/chaincoif/iron/aalloy
+	gloves = /obj/item/clothing/gloves/roguetown/plate/aalloy
+
+	if(skeletonclass == 0) // "standard"
+		id = /obj/item/clothing/ring/onyxa
+		shirt = /obj/item/clothing/suit/roguetown/armor/gambeson
+		mask = /obj/item/clothing/mask/rogue/sack
+	if(skeletonclass == 1)
+		id = /obj/item/clothing/ring/gold// slightly better
+		H.adjust_skillrank(/datum/skill/combat/shields, 1, TRUE) // 5 total.
+		r_hand = /obj/item/rogueweapon/shield/tower/metal/alloy // and a shield to go with it
+	if(skeletonclass == 2)
+		id = /obj/item/clothing/ring/coral // +30 value compared to onyx btw
+		H.adjust_skillrank(H.adjust_skillrank(/datum/skill/combat/swords, 1, TRUE)) // hardest, probably
+		mask = /obj/item/clothing/mask/rogue/facemask // nose crits not as easy
+	
+	H.adjust_skillrank(/datum/skill/combat/polearms, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/maces, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/axes, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/swords, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/knives, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/shields, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/unarmed, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/wrestling, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
+	H.adjust_skillrank(/datum/skill/misc/climbing, 4, TRUE)
+

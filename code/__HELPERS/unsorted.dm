@@ -229,7 +229,7 @@ Turf and target are separate in case you want to teleport some distance from a t
 
 
 //Returns a list of all items of interest with their name
-/proc/getpois(mobs_only=0,skip_mindless=0,team=null)
+/proc/getpois(mobs_only=FALSE,skip_mindless=FALSE,team=null,skip_antighost=TRUE)
 	var/list/mobs = sortmobs()
 	var/list/namecounts = list()
 	var/list/pois = list()
@@ -237,6 +237,8 @@ Turf and target are separate in case you want to teleport some distance from a t
 		if(skip_mindless && (!M.mind || !M.ckey))
 			continue
 		if(M.client && M.client.holder && M.client.holder.fakekey) //stealthmins
+			continue
+		if(skip_mindless && skip_antighost && (M.client?.prefs.ghost_toggles & TOGGLE_ANTIGHOST))
 			continue
 		var/name = avoid_assoc_duplicate_keys(M.real_name, namecounts)
 
@@ -406,7 +408,7 @@ Turf and target are separate in case you want to teleport some distance from a t
 	var/turf/target_turf = get_turf(target)
 	if (get_dist(source, target) > length) //If further than the length/dist then we can assume false
 		return FALSE
-	if(current == target_turf)	
+	if(current == target_turf)
 		return TRUE
 
 	var/steps = 1
@@ -1026,28 +1028,40 @@ rough example of the "cone" made by the 3 dirs checked
 		for(x in x to t_center.x+c_dist)
 			T = locate(x,y,t_center.z)
 			if(T)
-				L += T
+				if(istype(T, /turf/closed/wall/mineral/rogue/stone/unbreakable)||istype(T, /turf/closed/mineral/rogue/bedrock))
+					continue //if its unbreakable or bedrock, we skip this one
+				else
+					L += T
 
 		y = t_center.y + c_dist - 1
 		x = t_center.x + c_dist
 		for(y in t_center.y-c_dist to y)
 			T = locate(x,y,t_center.z)
 			if(T)
-				L += T
+				if(istype(T, /turf/closed/wall/mineral/rogue/stone/unbreakable)||istype(T, /turf/closed/mineral/rogue/bedrock))
+					continue //if its unbreakable or bedrock, we skip this one
+				else
+					L += T
 
 		y = t_center.y - c_dist
 		x = t_center.x + c_dist - 1
 		for(x in t_center.x-c_dist to x)
 			T = locate(x,y,t_center.z)
 			if(T)
-				L += T
+				if(istype(T, /turf/closed/wall/mineral/rogue/stone/unbreakable)||istype(T, /turf/closed/mineral/rogue/bedrock))
+					continue //if its unbreakable or bedrock, we skip this one
+				else
+					L += T
 
 		y = t_center.y - c_dist + 1
 		x = t_center.x - c_dist
 		for(y in y to t_center.y+c_dist)
 			T = locate(x,y,t_center.z)
 			if(T)
-				L += T
+				if(istype(T, /turf/closed/wall/mineral/rogue/stone/unbreakable)||istype(T, /turf/closed/mineral/rogue/bedrock))
+					continue //if its unbreakable or bedrock, we skip this one
+				else
+					L += T
 		c_dist++
 		if(tick_checked)
 			CHECK_TICK
@@ -1183,29 +1197,40 @@ GLOBAL_REAL_VAR(list/stack_trace_storage)
 	pixel_x = initialpixelx
 	pixel_y = initialpixely
 
+/// Checks whether a given icon state exists in a given icon file. If `file` and `state` both exist,
+/// this will return `TRUE` - otherwise, it will return `FALSE`.
+///
+/// If you want a stack trace to be output when the given state/file doesn't exist, use
+/// `/proc/icon_exists_or_scream()`.
+/proc/icon_exists(file, state)
+	if(isnull(file) || isnull(state))
+		return FALSE //This is common enough that it shouldn't panic, imo.
 
-///Checks if the given iconstate exists in the given file, caching the result. Setting scream to TRUE will print a stack trace ONCE.
-/proc/icon_exists(file, state, scream)
-	var/static/list/icon_states_cache = list()
-	if(icon_states_cache[file]?[state])
+	if(isnull(GLOB.icon_states_cache_lookup[file]))
+		compile_icon_states_cache(file)
+	return !isnull(GLOB.icon_states_cache_lookup[file][state])
+
+/// Functions the same as `/proc/icon_exists()`, but with the addition of a stack trace if the
+/// specified file or state doesn't exist.
+///
+/// Stack traces will only be output once for each file.
+/proc/icon_exists_or_scream(file, state)
+	if(icon_exists(file, state))
 		return TRUE
 
-	if(icon_states_cache[file]?[state] == FALSE)
-		return FALSE
+	var/static/list/screams = list()
+	if(!isnull(screams[file]))
+		screams[file] = TRUE
+		stack_trace("State [state] in file [file] does not exist.")
 
-	var/list/states = icon_states(file)
+	return FALSE
 
-	if(!icon_states_cache[file])
-		icon_states_cache[file] = list()
-
-	if(state in states)
-		icon_states_cache[file][state] = TRUE
-		return TRUE
-	else
-		icon_states_cache[file][state] = FALSE
-		if(scream)
-			stack_trace("Icon Lookup for state: [state] in file [file] failed.")
-		return FALSE
+/proc/compile_icon_states_cache(file)
+	GLOB.icon_states_cache[file] = list()
+	GLOB.icon_states_cache_lookup[file] = list()
+	for(var/istate in icon_states(file))
+		GLOB.icon_states_cache[file] += istate
+		GLOB.icon_states_cache_lookup[file][istate] = TRUE
 
 /proc/weightclass2text(w_class)
 	switch(w_class)
@@ -1425,49 +1450,6 @@ GLOBAL_DATUM_INIT(dview_mob, /mob/dview, new)
 
 	return pick(subtypesof(/obj/item/reagent_containers/food/snacks) - blocked)
 
-//For these two procs refs MUST be ref = TRUE format like typecaches!
-/proc/weakref_filter_list(list/things, list/refs)
-	if(!islist(things) || !islist(refs))
-		return
-	if(!refs.len)
-		return things
-	if(things.len > refs.len)
-		var/list/f = list()
-		for(var/i in refs)
-			var/datum/weakref/r = i
-			var/datum/d = r.resolve()
-			if(d)
-				f |= d
-		return things & f
-
-	else
-		. = list()
-		for(var/i in things)
-			if(!refs[WEAKREF(i)])
-				continue
-			. |= i
-
-/proc/weakref_filter_list_reverse(list/things, list/refs)
-	if(!islist(things) || !islist(refs))
-		return
-	if(!refs.len)
-		return things
-	if(things.len > refs.len)
-		var/list/f = list()
-		for(var/i in refs)
-			var/datum/weakref/r = i
-			var/datum/d = r.resolve()
-			if(d)
-				f |= d
-
-		return things - f
-	else
-		. = list()
-		for(var/i in things)
-			if(refs[WEAKREF(i)])
-				continue
-			. |= i
-
 /proc/special_list_filter(list/L, datum/callback/condition)
 	if(!islist(L) || !length(L) || !istype(condition))
 		return list()
@@ -1615,3 +1597,43 @@ GLOBAL_LIST_INIT(duplicate_forbidden_vars,list(
 		if(istype(A, i))
 			return TRUE
 	return FALSE
+
+/proc/get_actors_by_title(var/title)
+	var/list/actor_data = list()
+	for(var/mob_id in GLOB.actors_list)
+		if(GLOB.actors_list[mob_id]["rank"] != title)
+			continue
+		actor_data += list(list(
+			"data" = GLOB.actors_list[mob_id],
+			"mob_id" = mob_id,
+		))
+	return actor_data
+
+/proc/get_sorted_actors_list()
+	var/list/sorted_ckey_to_actor_data = list()
+	var/list/categories = list(
+		"Ducal Family" = GLOB.noble_positions,
+		"Courtiers" = GLOB.courtier_positions,
+		"Retinue" = GLOB.retinue_positions,
+		"Garrison" = GLOB.garrison_positions,
+		"Church" = GLOB.church_positions,
+		"Burgher" = GLOB.burgher_positions,
+		"Peasant" = GLOB.peasant_positions,
+		"Sidefolk" = GLOB.sidefolk_positions,
+		"Inquisition" = GLOB.inquisition_positions,
+		"Wanderer" = GLOB.wanderer_positions,
+	)
+
+	for(var/category in categories)
+		for(var/role in categories[category])
+			var/list/actor_data = get_actors_by_title(role)
+			for(var/actor in actor_data)
+				sorted_ckey_to_actor_data[actor["mob_id"]] = list("data" = actor["data"], "category" = category)
+
+	for(var/mob_id in GLOB.actors_list)
+		var/list/actor_data = GLOB.actors_list[mob_id]
+		if(!sorted_ckey_to_actor_data[mob_id])
+			sorted_ckey_to_actor_data[mob_id] = list("data" = actor_data, "category" = "Nobodies")
+
+	return sorted_ckey_to_actor_data
+

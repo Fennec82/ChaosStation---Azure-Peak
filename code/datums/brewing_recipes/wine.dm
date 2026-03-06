@@ -108,8 +108,27 @@
 	bottle_desc = "A potentially heretickal brew, Lux, when fermented, breaks down into Vitae, which can further ferment into a delectable wine."
 	reagent_to_brew = /datum/reagent/consumable/ethanol/luxwine
 	needed_reagents = list(/datum/reagent/water = 198) // standard
-	needed_items = list(/obj/item/reagent_containers/lux = 1, /obj/item/reagent_containers/food/snacks/sugar = 2,
+	needed_items = list(/obj/item/reagent_containers/lux_impure = 1, /obj/item/reagent_containers/food/snacks/sugar = 2,
 						 /obj/item/alch/calendula = 1) // a single lux, sugar, and a healing herb. seems fair 2 me.
 	brewed_amount = 2 // should make 2 bottles
 	brew_time = 5 MINUTES
 	sell_value = 120  // this shits heretical and has a high black market value
+
+/datum/brewing_recipe/winespiced
+	name = "Wine, Spiced"
+	category = "Fruit"
+	bottle_name = "spiced wine"
+	bottle_desc = "A bottle of locally-brewed spiced jackberry wine. Traditionally reserved for the holidaes, it still remains deliciously rich and aromatic all yil-round. Championed as a remedy for childhood ailments and injuries, courtesy of dwarven mothers."
+	reagent_to_brew = /datum/reagent/consumable/ethanol/spicedwine
+	needed_reagents = list(/datum/reagent/water = 198)
+	needed_crops = list(/obj/item/reagent_containers/food/snacks/grown/berries/rogue = 2, /obj/item/reagent_containers/food/snacks/grown/fruit/tangerine = 1,
+						/obj/item/reagent_containers/food/snacks/sugar = 1, /obj/item/reagent_containers/food/snacks/pumpkinspice = 1, /obj/item/reagent_containers/food/snacks/grown/nut = 1)
+	brewed_amount = 5
+	brew_time = 5 MINUTES
+	sell_value = 77 //Requires more time to fully age, and more materials to prepare than most non-luxwines. In exchange, it provides light healing and a very delicious taste.
+
+	ages = TRUE
+	age_times = list(
+		/datum/reagent/consumable/ethanol/spicedwine/aged = 15 MINUTES,
+		/datum/reagent/consumable/ethanol/spicedwine/delectable = 30 MINUTES
+	)

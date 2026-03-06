@@ -2,6 +2,9 @@
 	set waitfor = FALSE
 	set invisibility = 0
 
+	if(!client && ai_controller && ai_controller.ai_status == AI_STATUS_OFF)
+		return
+
 	SEND_SIGNAL(src, COMSIG_LIVING_LIFE, seconds, times_fired)
 
 	if((movement_type & FLYING) && !(movement_type & FLOATING))	//TODO: Better floating
@@ -31,23 +34,35 @@
 	if(!loc)
 		return
 
-	//Breathing, if applicable
-	handle_breathing(times_fired)
+	//Breathing, if applicable - CURRENTLY NOT IMPLEMENTED
+	//handle_breathing(times_fired)
+
 	if(HAS_TRAIT(src, TRAIT_SIMPLE_WOUNDS))
 		handle_wounds()
 		handle_embedded_objects()
 		handle_blood()
 		//passively heal even wounds with no passive healing
-		for(var/datum/wound/wound as anything in get_wounds())
-			wound.heal_wound(1)
+		heal_wounds(1)
 
 	/// ENDVRE AS HE DOES.
 	if(!stat && HAS_TRAIT(src, TRAIT_PSYDONITE) && !HAS_TRAIT(src, TRAIT_PARALYSIS))
 		handle_wounds()
-		//passively heal wounds, but not if you're skullcracked OR DEAD.
+		//passively heal wounds, when you're in trouble..
 		if(blood_volume > BLOOD_VOLUME_SURVIVE)
 			for(var/datum/wound/wound as anything in get_wounds())
-				wound.heal_wound(0.6)		
+				if(wound?.severity <= WOUND_SEVERITY_MODERATE)
+					wound.heal_wound(0.4)
+
+	if(!stat && HAS_TRAIT(src, TRAIT_LYCANRESILENCE) && !HAS_TRAIT(src, TRAIT_PARALYSIS))
+		if(src.has_status_effect(/datum/status_effect/fire_handler/fire_stacks/sunder) || src.has_status_effect(/datum/status_effect/fire_handler/fire_stacks/sunder/blessed))
+			return
+		handle_wounds()
+		if(blood_volume > BLOOD_VOLUME_SURVIVE)
+			for(var/datum/wound/wound as anything in get_wounds())
+				wound.heal_wound(3)
+
+	if(blood_volume <= BLOOD_VOLUME_SURVIVE && stat < CONSCIOUS)
+		handle_passive_blood()
 
 	if (QDELETED(src)) // diseases can qdel the mob via transformations
 		return
@@ -69,6 +84,28 @@
 
 	if(stat != DEAD)
 		return 1
+
+/mob/living/proc/handle_passive_blood()
+	#define MAX_PASSIVE_BLOOD_HEAL	10
+	#define MIN_PASSIVE_BLOOD_HEAL	0
+
+	var/passive_regen_rate = MIN_PASSIVE_BLOOD_HEAL
+	if(nutrition <= NUTRITION_LEVEL_HUNGRY)
+		passive_regen_rate -= 5
+	else
+		passive_regen_rate += 5
+
+	if(hydration <= HYDRATION_LEVEL_THIRSTY)
+		passive_regen_rate -= 5
+	else
+		passive_regen_rate += 5
+
+	passive_regen_rate = CLAMP(passive_regen_rate, MIN_PASSIVE_BLOOD_HEAL, MAX_PASSIVE_BLOOD_HEAL)
+
+	blood_volume += passive_regen_rate
+
+	#undef MAX_PASSIVE_BLOOD_HEAL
+	#undef MIN_PASSIVE_BLOOD_HEAL
 
 /mob/living/proc/check_drowning()
 	if(istype(loc, /turf/open/water))
@@ -103,9 +140,6 @@
 	if(istype(loc, /turf/open/water))
 		handle_inwater(loc)
 
-/mob/living/proc/handle_breathing(times_fired)
-	return
-
 /mob/living/proc/handle_random_events()
 	//random painstun
 	if(!stat && !HAS_TRAIT(src, TRAIT_NOPAINSTUN))
@@ -128,20 +162,20 @@
 	return
 
 /mob/living/proc/handle_wounds()
-	if(stat >= DEAD)
-		for(var/datum/wound/wound as anything in get_wounds())
-			if(istype(wound, /datum/wound))
-				wound.on_death()
-		return
 	for(var/datum/wound/wound as anything in get_wounds())
-		if(istype(wound, /datum/wound))
+		if(!wound)
+			continue
+
+		if(stat != DEAD)
 			wound.on_life()
+		else
+			wound.on_death()
 
 /obj/item/proc/on_embed_life(mob/living/user, obj/item/bodypart/bodypart)
 	return
 
 /mob/living/proc/handle_embedded_objects()
-	for(var/obj/item/embedded in simple_embedded_objects)
+	for(var/obj/item/embedded as anything in simple_embedded_objects)
 		if(embedded.on_embed_life(src))
 			continue
 

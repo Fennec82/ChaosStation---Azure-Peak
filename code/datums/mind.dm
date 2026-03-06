@@ -34,8 +34,10 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 
 /datum/mind
 	var/key
-	var/name				//replaces mob/var/original_name
-	var/ghostname			//replaces name for observers name if set
+	/// Replaces mob/var/original_name.
+	var/name
+	/// Replaces name for observers name if set.
+	var/ghostname
 	var/mob/living/current
 	var/active = 0
 
@@ -45,19 +47,20 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	var/special_role
 	var/list/restricted_roles = list()
 
-	var/list/spell_list = list() // Wizard mode & "Give Spell" badmin button.
+	/// Wizard mode & "Give Spell" badmin button.
+	var/list/spell_list = list()
 
 	var/spell_points
 	var/used_spell_points
+	var/list/spell_point_pools
+	var/list/spell_points_used_by_pool
 	var/movemovemovetext = "Move!!"
 	var/takeaimtext = "Take aim!!"
 	var/holdtext = "Hold!!"
-	var/onfeettext = "On your feet!!"
-	var/focustargettext = "Focus target!!"
 	var/retreattext = "Fall back!!"
+	var/chargetext = "Charge!!"
 	var/bolstertext = "Hold the line!!"
-	var/brotherhoodtext = "Stand proud, for the Brotherhood!!"
-	var/chargetext = "Chaaaaaarge!!"
+	var/onfeettext = "On your feet!!"
 
 	var/mob/living/carbon/champion = null
 	var/mob/living/carbon/ward = null
@@ -66,33 +69,44 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	var/linglink
 	var/datum/martial_art/martial_art
 	var/static/default_martial_art = new/datum/martial_art
-	var/miming = 0 // Mime's vow of silence
+	/// Mime's vow of silence.
+	var/miming = 0
 	var/list/antag_datums
-	var/antag_hud_icon_state = null //this mind's ANTAG_HUD should have this icon_state
-	var/datum/atom_hud/antag/antag_hud = null //this mind's antag HUD
+	/// This mind's ANTAG_HUD should have this icon_state.
+	var/antag_hud_icon_state = null
+	/// This mind's antag HUD.
+	var/datum/atom_hud/antag/antag_hud = null
 	var/damnation_type = 0
-	var/datum/mind/soulOwner //who owns the soul.  Under normal circumstances, this will point to src
-	var/hasSoul = TRUE // If false, renders the character unable to sell their soul.
-	var/isholy = FALSE //is this person a chaplain or admin role allowed to use bibles
+	/// Who owns the soul.  Under normal circumstances, this will point to src.
+	var/datum/mind/soulOwner
+	/// If false, renders the character unable to sell their soul.
+	var/hasSoul = TRUE
+	/// Is this person a chaplain or admin role allowed to use bibles.
+	var/isholy = FALSE
 
-	var/mob/living/enslaved_to //If this mind's master is another mob (i.e. adamantine golems)
+	/// If this mind's master is another mob (i.e. adamantine golems).
+	var/mob/living/enslaved_to
 	var/datum/language_holder/language_holder
 	var/unconvertable = FALSE
 	var/late_joiner = FALSE
 
 	var/last_death = 0
 
-	var/force_escaped = FALSE  // Set by Into The Sunset command of the shuttle manipulator
+	/// Set by Into The Sunset command of the shuttle manipulator.
+	var/force_escaped = FALSE
 
-	var/list/learned_recipes //List of learned recipe TYPES.
+	/// List of learned recipe TYPES.
+	var/list/learned_recipes
 
 	var/list/special_items = list()
 
 	var/list/areas_entered = list()
 
-	var/list/known_people = list() //contains person, their job, and their voice color
+	/// Contains person, their job, and their voice color.
+	var/list/known_people = list()
 
-	var/list/notes = list() //RTD add notes button
+	/// RTD add notes button.
+	var/list/notes = list()
 
 	var/lastrecipe
 
@@ -100,16 +114,26 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 
 	var/mugshot_set = FALSE
 
-	var/heretic_nickname 	// Nickname used for heretic commune
+	/// Nickname used for heretic commune.
+	var/heretic_nickname
 
-	var/picking = FALSE		// Variable that lets the event picker see if someones getting chosen or not
-	
-	var/job_bitflag = NONE	// the bitflag our job applied
+	/// Variable that lets the event picker see if someones getting chosen or not.
+	var/picking = FALSE
 
-	var/list/personal_objectives = list() // List of personal objectives not tied to the antag roles
+	/// The bitflag our job applied.
+	var/job_bitflag = NONE
+
+	/// List of personal objectives not tied to the antag roles.
+	var/list/personal_objectives = list()
+
+	var/has_changed_spell = FALSE
+	var/has_rituos = FALSE
+	var/obj/effect/proc_holder/spell/rituos_spell
+
+	var/has_bomb = FALSE
 
 /datum/mind/New(key)
-	src.key = key
+	key = key
 	soulOwner = src
 	martial_art = default_martial_art
 	set_assigned_role(SSjob.GetJobType(/datum/job/unassigned))
@@ -117,6 +141,11 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 
 /datum/mind/Destroy()
 	SSticker.minds -= src
+	soulOwner = null
+	if(current)
+		current.mind = null
+		current = null
+	enslaved_to = null
 	QDEL_NULL(sleep_adv)
 	if(islist(antag_datums))
 		QDEL_LIST(antag_datums)
@@ -139,7 +168,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 /datum/mind/proc/i_know_person(person) //they are added to ours
 	if(!person)
 		return
-	if(person == src || person == src.current)
+	if(person == src || person == current)
 		return
 	if(istype(person, /datum/mind))
 		var/datum/mind/M = person
@@ -153,6 +182,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 		if(!used_title)
 			used_title = "unknown"
 		known_people[H.real_name]["FJOB"] = used_title
+		known_people[H.real_name]["FSPECIES"] = H.dna.species.name
 		var/referred_gender
 		switch(H.pronouns)
 			if(HE_HIM)
@@ -174,7 +204,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 /datum/mind/proc/person_knows_me(person) //we are added to their lists
 	if(!person)
 		return
-	if(person == src || person == src.current)
+	if(person == src || person == current)
 		return
 	if(ishuman(person))
 		var/mob/living/carbon/human/guy = person
@@ -206,7 +236,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 					var/heretic_text = C.get_heretic_symbol(H)
 					if (heretic_text)
 						M.known_people[H.real_name]["FHERESY"] = heretic_text
-				
+
 
 /datum/mind/proc/do_i_know(datum/mind/person, name)
 	if(!person && !name)
@@ -252,11 +282,12 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 		var/fjob = known_people[P]["FJOB"]
 		var/fgender = known_people[P]["FGENDER"]
 		var/fage = known_people[P]["FAGE"]
+		var/fspecies = known_people[P]["FSPECIES"]
 		var/fheresy = known_people[P]["FHERESY"]
 		if(fcolor && fjob)
 			if (fheresy)
 				contents +="<B><font color=#f1d669>[fheresy]</font></B> "
-			contents += "<B><font color=#[fcolor];text-shadow:0 0 10px #8d5958, 0 0 20px #8d5958, 0 0 30px #8d5958, 0 0 40px #8d5958, 0 0 50px #e60073, 0 0 60px #8d5958, 0 0 70px #8d5958;>[P]</font></B><BR>[fjob], [capitalize(fgender)], [fage]"
+			contents += "<B><font color=#[fcolor];text-shadow:0 0 10px #8d5958, 0 0 20px #8d5958, 0 0 30px #8d5958, 0 0 40px #8d5958, 0 0 50px #e60073, 0 0 60px #8d5958, 0 0 70px #8d5958;>[P]</font></B><BR>[fjob], [capitalize(fgender)], [fspecies], [fage]"
 			contents += "<BR>"
 
 	var/datum/browser/popup = new(user, "PEOPLEIKNOW", "", 260, 400)
@@ -297,7 +328,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	if(key)
 		if(new_character.key != key)					//if we're transferring into a body with a key associated which is not ours
 			if(new_character.key)
-				testing("ghostizz")
+
 				new_character.ghostize(1)						//we'll need to ghostize so that key isn't mobless.
 	else
 		key = new_character.key
@@ -324,7 +355,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 
 	RegisterSignal(new_character, COMSIG_MOB_DEATH, PROC_REF(set_death_time))
 	if(active || force_key_move)
-		testing("dotransfer to [new_character]")
+
 		new_character.key = key		//now transfer the key to link the client to our new body
 	new_character.update_fov_angles()
 	SEND_SIGNAL(old_current, COMSIG_MIND_TRANSFER, new_character)
@@ -334,7 +365,16 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	spell_points += points
 	if(!has_spell(/obj/effect/proc_holder/spell/targeted/touch/prestidigitation))
 		AddSpell(new /obj/effect/proc_holder/spell/targeted/touch/prestidigitation)
-	check_learnspell() //check if we need to add or remove the learning spell
+	check_learnspell()
+
+/datum/mind/proc/set_spell_point_pools(list/pools)
+	spell_point_pools = pools.Copy()
+	spell_points_used_by_pool = list()
+	for(var/pool_name in pools)
+		spell_points_used_by_pool[pool_name] = 0
+	if(!has_spell(/obj/effect/proc_holder/spell/targeted/touch/prestidigitation))
+		AddSpell(new /obj/effect/proc_holder/spell/targeted/touch/prestidigitation)
+	check_learnspell()
 
 /datum/mind/proc/set_death_time()
 	last_death = world.time
@@ -378,7 +418,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	else
 		A.on_gain()
 	log_game("[key_name(src)] has gained antag datum [A.name]([A.type])")
-	var/client/picked_client = src.current?.client
+	var/client/picked_client = current?.client
 	picked_client?.mob?.mind.picking = FALSE
 	return A
 
@@ -463,6 +503,20 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 		recipient << browse(output,"window=memory")
 	else if(all_objectives.len || memory || personal_objectives.len)
 		to_chat(recipient, "<i>[output]</i>")
+
+/// output current targets to the player
+/datum/mind/proc/recall_targets(mob/recipient, window=1)
+	var/output = "<B>[recipient.real_name]'s Hitlist:</B><br>"
+	for(var/mob/living/carbon in GLOB.mob_living_list) // Iterate through all mobs in the world
+		if((carbon.real_name != recipient.real_name) && ((carbon.has_flaw(/datum/charflaw/hunted)) && (!istype(carbon, /mob/living/carbon/human/dummy))))//To be on the list they must be hunted, not be the user and not be a dummy (There is a dummy that has all vices for some reason)
+			output += "<br>[carbon.real_name]"
+			output += "<br>[carbon.real_name]"
+			if (carbon.job)
+				output += " - [carbon.job]"
+	output += "<br>Your creed is blood, your faith is steel. You will not rest until these souls are yours. Use the profane dagger to trap their souls for Graggar."
+
+	if(window)
+		recipient << browse(output,"window=memory")
 
 // Graggar culling event - tells people where the other is.
 /datum/mind/proc/recall_culling(mob/recipient, window=1)
@@ -710,20 +764,45 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 		add_antag_datum(/datum/antagonist/traitor)
 
 
-/datum/mind/proc/AddSpell(obj/effect/proc_holder/spell/S)
+/datum/mind/proc/AddSpell(obj/effect/proc_holder/spell/S, mob/living/user)
 	if(!S)
 		return
+	for(var/obj/effect/proc_holder/spell/present_spell in spell_list)
+		if(present_spell.name == S.name && present_spell.type == S.type)
+			return
 	spell_list += S
 	S.action.Grant(current)
+	if(user)
+		S.on_gain(user)
+	if(length(spell_list) == 1 && current)
+		addtimer(CALLBACK(src, PROC_REF(show_spell_tip)), 3 SECONDS)
+
+/datum/mind/proc/show_spell_tip()
+	if(current)
+		to_chat(current, span_nicegreen("Tip: You can Ctrl-Click your hotkey bar to unlock it, then drag to rearrange your spells. Re-arranging them change which hotkeys they are bound to in order from left to right (Alt 1 to Alt 9 default). You can shift click your spells to learn more about them."))
 
 /datum/mind/proc/check_learnspell()
-	if(!has_spell(/obj/effect/proc_holder/spell/self/learnspell)) //are we missing the learning spell?
-		if((spell_points - used_spell_points) > 0) //do we have points?
-			AddSpell(new /obj/effect/proc_holder/spell/self/learnspell(null)) //put it in
+	// Pool-based system always takes priority over flat spellpoints to prevent unexpected spell point sources from bypassing pool restrictions
+	if(LAZYLEN(spell_point_pools))
+		var/has_remaining = FALSE
+		for(var/pool_name in spell_point_pools)
+			var/used = spell_points_used_by_pool?[pool_name] || 0
+			if(used < spell_point_pools[pool_name])
+				has_remaining = TRUE
+				break
+		if(has_remaining && !has_spell(/obj/effect/proc_holder/spell/self/learnspell))
+			AddSpell(new /obj/effect/proc_holder/spell/self/learnspell(null))
+		else if(!has_remaining)
+			RemoveSpell(/obj/effect/proc_holder/spell/self/learnspell)
+		return
+
+	if(!has_spell(/obj/effect/proc_holder/spell/self/learnspell))
+		if((spell_points - used_spell_points) > 0)
+			AddSpell(new /obj/effect/proc_holder/spell/self/learnspell(null))
 			return
 
-	if((spell_points - used_spell_points) <= 0) //are we out of points?
-		RemoveSpell(/obj/effect/proc_holder/spell/self/learnspell) //bye bye spell
+	if((spell_points - used_spell_points) <= 0)
+		RemoveSpell(/obj/effect/proc_holder/spell/self/learnspell)
 		return
 	return
 
@@ -734,6 +813,18 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	for(var/obj/effect/proc_holder/spell as anything in spell_list)
 		if((specific && spell.type == spell_type) || istype(spell, spell_type))
 			return TRUE
+	return FALSE
+
+/datum/mind/proc/get_spell(spell_type, specific = FALSE)
+	var/spell_path = spell_type
+	if(istype(spell_type, /obj/effect/proc_holder))
+		var/obj/effect/proc_holder/instanced_spell = spell_type
+		spell_path = instanced_spell.type
+	for(var/obj/effect/proc_holder/spell as anything in spell_list)
+		if(specific && (spell.type == spell_path))
+			return spell
+		else if(!specific && istype(spell, spell_path))
+			return spell
 	return FALSE
 
 /datum/mind/proc/owns_soul()
@@ -842,6 +933,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	if(!mind.name)
 		mind.name = real_name
 	mind.current = src
+	AddComponent(/datum/component/area_ambience)
 
 /mob/living/carbon/mind_initialize()
 	..()
@@ -869,8 +961,8 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	mind.assigned_role = ROLE_PAI
 	mind.special_role = ""
 
-/datum/mind/proc/add_sleep_experience(skill, amt, silent = FALSE)
-	sleep_adv.add_sleep_experience(skill, amt, silent)
+/datum/mind/proc/add_sleep_experience(skill, amt, silent = FALSE, show_xp = TRUE)
+	sleep_adv.add_sleep_experience(skill, amt, silent, show_xp)
 
 /datum/mind/proc/add_personal_objective(datum/objective/O)
 	if(!istype(O))
@@ -887,3 +979,37 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	for(var/O in personal_objectives)
 		qdel(O)
 	personal_objectives.Cut()
+
+/proc/handle_special_items_retrieval(mob/user, atom/host_object)
+	// Attempts to retrieve an item from a player's stash, and applies any base colors, where preferable.
+	if(user.mind && isliving(user))
+		if(user.mind.special_items && user.mind.special_items.len)
+			var/item = input(user, "What will I take?", "STASH") as null|anything in user.mind.special_items
+			if(item)
+				if(user.Adjacent(host_object))
+					if(user.mind.special_items[item])
+						var/path2item = user.mind.special_items[item]
+						user.mind.special_items -= item
+						var/obj/item/I = new path2item(user.loc)
+						user.put_in_hands(I)
+						// Apply loadout-specific properties only if this is a loadout item
+						var/list/metadata = user.client?.prefs?.gear_list?[item]
+						if(islist(metadata))
+							// Free loadout items cannot be sold, smelted, or salvaged (triumph items are exempt)
+							var/datum/loadout_item/LI = GLOB.loadout_items_by_name[item]
+							if(!LI?.triumph_cost)
+								I.sellprice = 0
+								I.smeltresult = null
+								I.salvage_result = null
+							// Apply metadata (color, custom name, custom desc)
+							if(metadata["color"])
+								I.add_atom_colour(metadata["color"], FIXED_COLOUR_PRIORITY)
+							if(metadata["detail_color"] && I.detail_tag)
+								I.detail_color = metadata["detail_color"]
+							if(metadata["altdetail_color"] && I.altdetail_tag)
+								I.altdetail_color = metadata["altdetail_color"]
+							if(metadata["custom_name"])
+								I.name = metadata["custom_name"]
+							if(metadata["custom_desc"])
+								I.desc = metadata["custom_desc"]
+							I.update_icon()

@@ -116,14 +116,14 @@
 			base_drain = MEDIUM_ARMOR_PENALTY
 
 	var/abyssor_swim_bonus = HAS_TRAIT(swimmer, TRAIT_ABYSSOR_SWIM) ? 5 : 0
-	var/swimming_skill_level = swimmer.get_skill_level(/datum/skill/misc/swimming) 
+	var/swimming_skill_level = swimmer.get_skill_level(/datum/skill/misc/swimming)
 	. = max(base_drain - (swimming_skill_level * STAM_PER_LEVEL) - abyssor_swim_bonus, MIN_STAM_DRAIN)
 	if(swimmer.mind)
 		swimmer.mind.add_sleep_experience(/datum/skill/misc/swimming, swimmer.STAINT * xpmod)
 //	. += (swimmer.checkwornweight()*2)
 	if(!swimmer.check_armor_skill())
 		. += UNSKILLED_ARMOR_PENALTY
-	if(.) // this check is expensive so we only run it if we do expect to use stamina	
+	if(.) // this check is expensive so we only run it if we do expect to use stamina
 		for(var/obj/structure/S in src)
 			if(S.obj_flags & BLOCK_Z_OUT_DOWN)
 				return 0
@@ -195,12 +195,12 @@
 				playsound(AM, pick('sound/foley/watermove (1).ogg','sound/foley/watermove (2).ogg'), 100, FALSE)
 			if(istype(oldLoc, type) && (get_dir(src, oldLoc) != SOUTH))
 				water_overlay.layer = ABOVE_MOB_LAYER
-				water_overlay.plane = GAME_PLANE_UPPER
+				water_overlay.plane = GAME_PLANE_HIGHEST
 			else
 				spawn(6)
 					if(AM.loc == src)
 						water_overlay.layer = ABOVE_MOB_LAYER
-						water_overlay.plane = GAME_PLANE_UPPER
+						water_overlay.plane = GAME_PLANE_HIGHEST
 		if(!istype(L, /mob/living/carbon/human/species/skeleton))
 			return
 		if(!istype(src, /turf/open/water/sewer))
@@ -219,7 +219,7 @@
 			playsound(user, 'sound/foley/drawwater.ogg', 100, FALSE)
 			if(do_after(user, 8, target = src))
 				user.changeNext_move(CLICK_CD_MELEE)
-				C.reagents.add_reagent(water_reagent, 200)
+				C.reagents.add_reagent(water_reagent, C.reagents.maximum_volume)
 				to_chat(user, span_notice("I fill [C] from [src]."))
 				// If the user is filling a water purifier and the water isn't already clean...
 				if (istype(C, /obj/item/reagent_containers/glass/bottle/waterskin/purifier) && water_reagent != water_reagent_purified)
@@ -237,6 +237,10 @@
 		playsound(user, pick_n_take(wash), 100, FALSE)
 		var/obj/item2wash = user.get_active_held_item()
 		if(!item2wash)
+			if(istype(src, /turf/open/water/bath) && ishuman(user))
+				var/mob/living/carbon/human/bather = user
+				bather.relaxing_bath(1)
+				return
 			user.visible_message(span_info("[user] starts to wash in [src]."))
 			if(do_after(L, 3 SECONDS, target = src))
 				if(wash_in)
@@ -323,9 +327,7 @@
 
 /turf/open/water/get_slowdown(mob/user)
 	var/returned = slowdown
-	returned = returned - (user.get_skill_level(/datum/skill/misc/swimming))
 	if(ishuman(user))
-		returned = max(returned, 0.5)
 		var/mob/living/carbon/human/H = user
 		var/ac = H.highest_ac_worn()
 		switch(ac)
@@ -412,11 +414,16 @@
 
 /turf/open/water/swamp/Entered(atom/movable/AM, atom/oldLoc)
 	. = ..()
+	if(!oldLoc)
+		return
 	if(HAS_TRAIT(AM, TRAIT_LEECHIMMUNE))
 		return
 	if(isliving(AM) && !AM.throwing)
 		if(ishuman(AM))
 			var/mob/living/carbon/human/C = AM
+			// check if we're riding a boat or a mount (we can presume a living mob is a mount), no leeches if so
+			if(istype(C.buckled, /obj/vehicle/ridden) || isliving(C.buckled))
+				return
 			var/chance = 3
 			if(C.m_intent == MOVE_INTENT_RUN)
 				chance = 6
@@ -449,28 +456,39 @@
 
 /turf/open/water/swamp/deep/Entered(atom/movable/AM, atom/oldLoc)
 	. = ..()
+	if(!oldLoc)
+		return .
+
 	if(HAS_TRAIT(AM, TRAIT_LEECHIMMUNE))
-		return
+		return .
+
 	if(isliving(AM) && !AM.throwing)
 		if(ishuman(AM))
 			var/mob/living/carbon/human/C = AM
+			if(istype(C.buckled, /obj/vehicle/ridden) || isliving(C.buckled))
+				return .
+
 			var/chance = 6
 			if(C.m_intent == MOVE_INTENT_RUN)
 				chance = 12		//yikes
-			if(C.m_intent == MOVE_INTENT_SNEAK)
+			else if(C.m_intent == MOVE_INTENT_SNEAK)
 				chance = 2
+
 			if(!prob(chance))
-				return
+				return .
+
 			if(C.blood_volume <= 0)
-				return
-			var/list/zonee = list(BODY_ZONE_CHEST,BODY_ZONE_R_LEG,BODY_ZONE_L_LEG,BODY_ZONE_R_ARM,BODY_ZONE_L_ARM)
-			for(var/i = 0, i <= zonee.len, i++)
+				return .
+
+			var/list/zonee = list(BODY_ZONE_CHEST, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG, BODY_ZONE_R_ARM, BODY_ZONE_L_ARM)
+			for(var/i = 1; i <= zonee.len; i++)
 				var/zone = pick(zonee)
 				var/obj/item/bodypart/BP = C.get_bodypart(zone)
 				if(!BP)
 					continue
 				if(BP.skeletonized)
 					continue
+
 				var/obj/item/natural/worms/leech/I = new(C)
 				BP.add_embedded_object(I, silent = TRUE)
 				return .
@@ -499,7 +517,6 @@
 	slowdown = 5
 	wash_in = TRUE
 	swim_skill = TRUE
-	var/river_processing
 	swimdir = TRUE
 
 /turf/open/water/river/flow
@@ -530,13 +547,12 @@
 
 /turf/open/water/river/Entered(atom/movable/AM, atom/oldLoc)
 	. = ..()
-	if(isliving(AM))
-		if(!river_processing)
-			river_processing = addtimer(CALLBACK(src, PROC_REF(process_river)), 5, TIMER_STOPPABLE)
+	START_PROCESSING(SSrivers, src)
 
 /turf/open/water/river/get_heuristic_slowdown(mob/traverser, travel_dir)
-	var/const/UPSTREAM_PENALTY = 2
-	var/const/DOWNSTREAM_BONUS = -2
+	var/const/UPSTREAM_PENALTY = 4
+	var/const/DOWNSTREAM_BONUS = -1
+	var/const/SIDESTREAM_PENALTY = 2
 	. = ..()
 	if(traverser.is_floor_hazard_immune())
 		return
@@ -547,15 +563,30 @@
 		. += DOWNSTREAM_BONUS // faster!
 	else if(travel_dir == GLOB.reverse_dir[dir]) // upriver
 		. += UPSTREAM_PENALTY // slower
+	else
+		. += SIDESTREAM_PENALTY // sidestream walking isn't free, bro
 
 /turf/open/water/river/proc/process_river()
-	river_processing = null
+	var/found_movable = FALSE
 	for(var/atom/movable/A in contents)
+		found_movable = TRUE
 		for(var/obj/structure/S in src)
 			if(S.obj_flags & BLOCK_Z_OUT_DOWN)
 				return
 		if((A.loc == src))
 			A.ConveyorMove(dir)
+
+	if(found_movable)
+		STOP_PROCESSING(SSrivers, src)
+		return
+
+/turf/open/water/river/CanPass(atom/movable/mover, turf/target)
+	if(isliving(mover))
+		var/mob/mover_mob = mover
+		// prevent NPCs from constantly trying to go against the flow
+		if(!mover_mob.mind && get_dir(src, mover) == dir)
+			return FALSE
+	return ..()
 
 /turf/open/water/ocean
 	name = "salt water"

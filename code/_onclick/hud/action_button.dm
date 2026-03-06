@@ -1,9 +1,10 @@
-#define ACTION_BUTTON_DEFAULT_BACKGROUND "default"
+#define AB_MAX_COLUMNS 12
 
 /atom/movable/screen/movable/action_button
 	var/datum/action/linked_action
 	var/actiontooltipstyle = ""
 	screen_loc = null
+	var/mutable_appearance/blank_icon
 
 	var/button_icon_state
 	var/appearance_cache
@@ -11,6 +12,12 @@
 	var/id
 	var/ordered = TRUE //If the button gets placed into the default bar
 	nomouseover = FALSE
+
+	var/atom/movable/screen/maptext_holder/maptext_holder
+
+/atom/movable/screen/movable/action_button/Destroy()
+	QDEL_NULL(maptext_holder)
+	return ..()
 
 /atom/movable/screen/movable/action_button/proc/can_use(mob/user)
 	if (linked_action)
@@ -58,7 +65,11 @@
 			usr.client.prefs.action_buttons_screen_locs["[name]_[id]"] = locked ? moved : null
 		return TRUE
 	if(modifiers["shift"])
-		examine_ui(usr)
+		var/datum/action/spell_action/SA = linked_action
+		if(istype(SA))
+			SA.examine(usr)
+		else
+			examine_ui(usr)
 		return TRUE
 	if(usr.next_click > world.time)
 		return
@@ -216,21 +227,6 @@
 			if(reload_screen)
 				client.screen += B
 
-//		if(!button_number)
-//			hud_used.hide_actions_toggle.screen_loc = null
-//			return
-
-//	if(!hud_used.hide_actions_toggle.moved)
-//		hud_used.hide_actions_toggle.screen_loc = hud_used.ButtonNumberToScreenCoords(button_number+1)
-//	else
-//		hud_used.hide_actions_toggle.screen_loc = hud_used.hide_actions_toggle.moved
-//	if(reload_screen)
-//		client.screen += hud_used.hide_actions_toggle
-
-
-
-#define AB_MAX_COLUMNS 12
-
 /datum/hud/proc/ButtonNumberToScreenCoords(number) // TODO : Make this zero-indexed for readabilty
 	var/row = round((number - 1)/AB_MAX_COLUMNS)
 	var/col = ((number - 1)%(AB_MAX_COLUMNS)) + 1
@@ -251,3 +247,31 @@
 	var/matrix/M = matrix()
 	M.Translate(x_offset,y_offset)
 	button.transform = M
+
+/atom/movable/screen/movable/action_button/proc/update_maptext(cd_time_deciseconds, color_cd = "#800000", color_neutral = "#ffffff")
+	if(!istype(maptext_holder))
+		maptext_holder = new(src)
+		vis_contents.Add(maptext_holder)
+
+	maptext_holder.update_maptext(cd_time_deciseconds, color_cd, color_neutral)
+
+/atom/movable/screen/maptext_holder
+	layer = ABOVE_HUD_LAYER
+	maptext_x = 8
+	maptext_y = 4
+
+/atom/movable/screen/maptext_holder/proc/update_maptext(cd_time_deciseconds, color_cd = "#800000", color_neutral = "#ffffff")
+	if(cd_time_deciseconds <= 0)
+		maptext = null
+		color = color_neutral
+		return
+	var/seconds_left = round(cd_time_deciseconds / (1 SECONDS), 0.1)
+	if(seconds_left >= 60)
+		var/mins = round(seconds_left / 60)
+		var/secs = round(seconds_left) % 60
+		maptext = MAPTEXT("[mins]:[secs < 10 ? "0[secs]" : "[secs]"]")
+	else
+		maptext = MAPTEXT("[seconds_left]s")
+	color = color_cd
+
+#undef AB_MAX_COLUMNS

@@ -13,7 +13,7 @@
 	base_intents = list(INTENT_HELP, INTENT_DISARM, INTENT_GRAB, /datum/intent/unarmed/claw)
 	a_intent = INTENT_HELP
 	d_intent = INTENT_PARRY
-	possible_mmb_intents = list(INTENT_STEAL, INTENT_JUMP, INTENT_KICK, INTENT_BITE)
+	possible_mmb_intents = list(INTENT_SPECIAL, INTENT_JUMP, INTENT_KICK, INTENT_BITE)
 	cmode_music = 'sound/music/combat_weird.ogg'
 
 /mob/living/carbon/human/species/skeleton/npc
@@ -36,12 +36,13 @@
 
 /mob/living/carbon/human/species/skeleton/after_creation()
 	..()
-	if(src.dna && src.dna.species)
-		src.dna.species.species_traits |= NOBLOOD
-		src.dna.species.soundpack_m = new /datum/voicepack/skeleton()
-		src.dna.species.soundpack_f = new /datum/voicepack/skeleton()
-	if(src.charflaw)
-		QDEL_NULL(src.charflaw)
+	if(dna && dna.species)
+		dna.species.species_traits |= NOBLOOD
+		dna.species.soundpack_m = new /datum/voicepack/skeleton()
+		dna.species.soundpack_f = new /datum/voicepack/skeleton()
+	for(var/datum/charflaw/cf in charflaws)
+		charflaws.Remove(cf)
+		QDEL_NULL(cf)
 	name = "Skeleton"
 	real_name = "Skeleton"
 	voice_type = VOICE_TYPE_MASC //So that "Unknown Man" properly substitutes in with face cover
@@ -67,34 +68,44 @@
 		if(OU)
 			equipOutfit(OU)
 
-/mob/living/carbon/human/species/skeleton/fully_heal(admin_revive)
+/mob/living/carbon/human/species/skeleton/fully_heal(admin_revive = FALSE, break_restraints = FALSE)
 	. = ..()
 	skeletonize()
 
 /mob/living/carbon/human/species/skeleton/proc/skeletonize()
 	mob_biotypes |= MOB_UNDEAD
-	var/obj/item/bodypart/O = src.get_bodypart(BODY_ZONE_R_ARM)
+	var/obj/item/bodypart/O = get_bodypart(BODY_ZONE_R_ARM)
 	if(O)
 		O.drop_limb()
 		qdel(O)
-	O = src.get_bodypart(BODY_ZONE_L_ARM)
+	O = get_bodypart(BODY_ZONE_L_ARM)
 	if(O)
 		O.drop_limb()
 		qdel(O)
-	src.regenerate_limb(BODY_ZONE_R_ARM)
-	src.regenerate_limb(BODY_ZONE_L_ARM)
-	var/obj/item/organ/eyes/eyes = src.getorganslot(ORGAN_SLOT_EYES)
+	regenerate_limb(BODY_ZONE_R_ARM)
+	regenerate_limb(BODY_ZONE_L_ARM)
+	var/obj/item/organ/eyes/eyes = getorganslot(ORGAN_SLOT_EYES)
 	if(eyes)
 		eyes.Remove(src,1)
 		QDEL_NULL(eyes)
-	eyes = new /obj/item/organ/eyes/night_vision/zombie
+	eyes = SSwardrobe.provide_type(/obj/item/organ/eyes/night_vision/zombie)
 	eyes.Insert(src)
-	for(var/obj/item/bodypart/B in src.bodyparts)
+	for(var/obj/item/bodypart/B in bodyparts)
 		B.skeletonize(FALSE)
 	update_body()
 
 /mob/living/carbon/human/species/skeleton/npc/no_equipment
-    skel_outfit = null
+	skel_outfit = null
 
 /mob/living/carbon/human/species/skeleton/no_equipment
-    skel_outfit = null
+	skel_outfit = null
+	var/datum/weakref/crystal
+
+/mob/living/carbon/human/species/skeleton/no_equipment/death(gibbed, nocutscene = FALSE)
+	..()
+	var/obj/item/necro_relics/necro_crystal/active_crystal = crystal.resolve()
+	for(var/datum/weakref/W in active_crystal.active_skeletons)
+		if(W.resolve() == src)
+			active_crystal.active_skeletons -= W
+	active_crystal = null
+	gib(no_brain = TRUE, no_organs = TRUE)

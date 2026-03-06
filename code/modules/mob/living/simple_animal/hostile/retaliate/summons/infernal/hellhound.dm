@@ -2,6 +2,8 @@
 /mob/living/simple_animal/hostile/retaliate/rogue/infernal/hellhound
 	icon = 'icons/mob/summonable/32x32.dmi'
 	name = "hell hound"
+	desc = "This is a canine-shaped creature formed of billowing heat and snaking flames! Its maw resembles a furnace; \
+	better not fall into it."
 	icon_state = "hellhound"
 	icon_living = "hellhound"
 	icon_dead = "vvd"
@@ -37,6 +39,7 @@
 	simple_detect_bonus = 20
 	deaggroprob = 0
 	defprob = 40
+	candodge = TRUE
 	// del_on_deaggro = 44 SECONDS
 	retreat_health = 0.3
 	food = 0

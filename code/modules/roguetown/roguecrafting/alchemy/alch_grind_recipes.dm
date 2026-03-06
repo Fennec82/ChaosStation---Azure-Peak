@@ -118,6 +118,12 @@
 	valid_outputs = list(/obj/item/alch/solardust = 1)
 	bonus_chance_outputs = list(/obj/item/alch/firedust = 25)
 
+/datum/alch_grind_recipe/scrap
+	name = "Scrap"
+	valid_input = /obj/item/scrap
+	valid_outputs = list(/obj/item/alch/irondust = 1)
+	bonus_chance_outputs = list(/obj/item/alch/runedust = 10)
+
 //Ores -> dust
 /datum/alch_grind_recipe/gold_ore
 	name = "Gold Ore"
@@ -217,7 +223,7 @@
 	bonus_chance_outputs = list(/obj/item/alch/waterdust = 66)
 
 /datum/alch_grind_recipe/mineraldustdiamond // costs a whopping 18 gold to make, why are you doing this
-	name = "Mineral Dust (Diamond)"
+	name = "Mineral Dust (Dorpel)"
 	valid_input = /obj/item/roguegem/diamond
 	valid_outputs = list(/obj/item/alch/mineraldust = 1, /obj/item/alch/golddust = 6)
 	bonus_chance_outputs = list(/obj/item/alch/golddust = 66)

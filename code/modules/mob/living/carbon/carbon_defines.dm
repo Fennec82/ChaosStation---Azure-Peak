@@ -5,6 +5,9 @@
 	hud_possible = list(ANTAG_HUD)
 	has_limbs = 1
 	held_items = list(null, null)
+
+	///visible organs caching
+	var/list/visible_organs = list()
 	///List of /obj/item/organ in the mob. They don't go in the contents for some reason I don't want to know.
 	var/list/internal_organs = list()
 	///Same as above, but stores "slot ID" - "organ" pairs for easy access.
@@ -87,7 +90,11 @@
 	///knocks you down
 	var/stam_paralyzed = FALSE
 
-/// Amount of remaining vitae that can be drained from this mob
-	var/vitae_pool = 8000
-
 	var/next_smell = 0
+
+	/// Bitflags for pending icon updates - batched at end of tick
+	var/pending_icon_updates = NONE
+	/// Cached key for damage overlay state - invalidated when damage state changes
+	var/damage_overlay_cache_key
+	/// Cached key for body overlay state (facial features, etc) - invalidated when body state changes
+	var/body_overlay_cache_key

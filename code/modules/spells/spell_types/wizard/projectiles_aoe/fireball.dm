@@ -1,6 +1,6 @@
 /obj/effect/proc_holder/spell/invoked/projectile/fireball
 	name = "Fireball"
-	desc = "Shoot out a ball of fire that emits a light explosion on impact, setting the target alight."
+	desc = "Shoot out a ball of fire that emits a light explosion on impact, setting the target alight. Consumes <b>Arcane Marks</b> for extra damage when fully stacked."
 	clothes_req = FALSE
 	range = 8
 	projectile_type = /obj/projectile/magic/aoe/fireball/rogue
@@ -26,13 +26,13 @@
 
 /obj/projectile/magic/aoe/fireball/rogue
 	name = "fireball"
-	exp_heavy = 0
-	exp_light = 0
+	exp_heavy = -1
+	exp_light = -1
 	exp_flash = 0
 	exp_fire = 1
-	damage = 60
+	damage = 40
 	damage_type = BURN
-	npc_simple_damage_mult = 2 // HAHAHA
+	npc_simple_damage_mult = 3 // 1 shotting crawlers is cool. intentionally different from other fireballs due to arcyne mark disparity
 	accuracy = 40 // Base accuracy is lower for burn projectiles because they bypass armor
 	nodamage = FALSE
 	flag = "magic"
@@ -41,12 +41,27 @@
 
 
 /obj/projectile/magic/aoe/fireball/rogue/on_hit(target)
-	. = ..()
+
+	var/mob/living/M
+	var/consume_marks = FALSE
 	if(ismob(target))
-		var/mob/living/M = target
+		M = target
+		var/datum/status_effect/debuff/arcanemark/mark = M.has_status_effect(/datum/status_effect/debuff/arcanemark)
+		if(mark && mark.stacks >= mark.max_stacks)
+			damage += 20 //Fuck You, Dude.
+			consume_marks = TRUE
+
+
+	. = ..()
+
+	if(ismob(target))
 		if(M.anti_magic_check())
 			visible_message(span_warning("[src] fizzles on contact with [target]!"))
 			playsound(get_turf(target), 'sound/magic/magic_nulled.ogg', 100)
 			qdel(src)
 			return BULLET_ACT_BLOCK
+		if(consume_marks)
+			to_chat(M, "<span class='userdanger'>SCALDING HELLFIRE; TRYPTICH-MARKE DETONATION!</span>")
+			M.adjust_fire_stacks(2)
+			consume_arcane_mark_stacks(M)
 		M.adjust_fire_stacks(2)

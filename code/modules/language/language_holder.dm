@@ -1,5 +1,5 @@
 /datum/language_holder
-	var/list/languages = list(/datum/language/common)
+	var/list/languages = list()
 	var/list/shadow_languages = list()
 	var/only_speaks_language = null
 	var/selected_default_language = null
@@ -60,14 +60,21 @@
 	languages.Cut()
 
 /datum/language_holder/proc/has_language(datum/language/dt)
+	if(!dt || !ispath(dt))
+		return FALSE
+	
 	if(is_type_in_typecache(dt, languages))
 		return LANGUAGE_KNOWN
-	else
-		var/atom/movable/AM = get_atom()
-		var/datum/language_holder/L = AM.get_language_holder(shadow=FALSE)
-		if(L != src)
-			if(is_type_in_typecache(dt, L.shadow_languages))
-				return LANGUAGE_SHADOWED
+
+	var/atom/movable/AM = get_atom()
+	if(!AM || QDELETED(AM))
+		return FALSE
+
+	var/datum/language_holder/L = AM.get_language_holder(shadow=FALSE)
+	if(L && L != src)
+		if(is_type_in_typecache(dt, L.shadow_languages))
+			return LANGUAGE_SHADOWED
+
 	return FALSE
 
 /datum/language_holder/proc/copy_known_languages_from(thing, replace=FALSE)
@@ -87,7 +94,6 @@
 	for(var/l in other.languages)
 		src.grant_language(l)
 
-
 /datum/language_holder/proc/open_language_menu(mob/user)
 	if(!language_menu)
 		language_menu = new(src)
@@ -100,6 +106,9 @@
 		var/datum/mind/M = owner
 		if(M.current)
 			. = M.current
+
+/datum/language_holder/basic
+	languages = list(/datum/language/common)
 
 /datum/language_holder/alien
 	languages = list(/datum/language/xenocommon)

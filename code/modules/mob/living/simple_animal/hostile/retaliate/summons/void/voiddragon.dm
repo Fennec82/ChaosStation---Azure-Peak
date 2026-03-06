@@ -89,6 +89,8 @@ It will also call down lightning strikes from the sky, and fling people with it'
 	speed = 5
 	move_to_delay = 5
 	ranged = TRUE
+	canparry = TRUE
+	defprob = 70
 	pixel_x = -32
 	var/swooping = NONE
 	var/player_cooldown = 0
@@ -356,7 +358,7 @@ It will also call down lightning strikes from the sky, and fling people with it'
 	if(stat || swooping)
 		return
 	if(manual_target)
-		target = manual_target
+		GiveTarget(manual_target)
 	if(!target)
 		return
 	playsound(loc, 'sound/vo/mobs/vdragon/drgnroar.ogg', 50, TRUE, -1)

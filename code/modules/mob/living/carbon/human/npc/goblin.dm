@@ -12,10 +12,9 @@
 	ambushable = FALSE
 	base_intents = list(INTENT_HELP, INTENT_DISARM, INTENT_GRAB, /datum/intent/unarmed/claw)
 	a_intent = INTENT_HELP
-	possible_mmb_intents = list(INTENT_STEAL, INTENT_JUMP, INTENT_KICK, INTENT_BITE)
+	possible_mmb_intents = list(INTENT_SPECIAL, INTENT_JUMP, INTENT_KICK, INTENT_BITE)
 	possible_rmb_intents = list(/datum/rmb_intent/feint, /datum/rmb_intent/swift, /datum/rmb_intent/riposte, /datum/rmb_intent/weak)
 	flee_in_pain = TRUE
-	vitae_pool = 250 // Small, frail creechers with not so much vitality to gain from.
 
 /mob/living/carbon/human/species/goblin/npc
 	aggressive=1
@@ -119,7 +118,13 @@
 	name = "goblin"
 	id = "goblin"
 	species_traits = list(NO_UNDERWEAR,NOEYESPRITES)
-	inherent_traits = list(TRAIT_RESISTCOLD, TRAIT_RESISTHIGHPRESSURE, TRAIT_RESISTLOWPRESSURE, TRAIT_RADIMMUNE, TRAIT_CRITICAL_WEAKNESS, TRAIT_NASTY_EATER, TRAIT_LEECHIMMUNE)
+	inherent_traits = list(TRAIT_RESISTCOLD, 
+		TRAIT_RESISTHIGHPRESSURE, 
+		TRAIT_RESISTLOWPRESSURE, 
+		TRAIT_RADIMMUNE, 
+		TRAIT_CRITICAL_WEAKNESS, 
+		TRAIT_NASTY_EATER, 
+		TRAIT_LEECHIMMUNE) // For goblin armor
 	no_equip = list(SLOT_SHIRT, SLOT_WEAR_MASK, SLOT_GLOVES, SLOT_SHOES, SLOT_PANTS, SLOT_S_STORE)
 	nojumpsuit = 1
 	sexes = 1
@@ -141,6 +146,9 @@
 	G.update_wearable()
 	H.update_transform()
 	return TRUE
+
+/mob/living/carbon/human/species/goblin/update_body_parts(redraw)
+	update_body()
 
 /mob/living/carbon/human/species/goblin/update_body()
 	remove_overlay(BODY_LAYER)
@@ -229,8 +237,9 @@
 	eyes = new /obj/item/organ/eyes/night_vision/nightmare
 	eyes.Insert(src)
 	src.underwear = "Nude"
-	if(src.charflaw)
-		QDEL_NULL(src.charflaw)
+	for(var/datum/charflaw/cf in charflaws)
+		charflaws.Remove(cf)
+		QDEL_NULL(cf)
 	update_body()
 	faction = list("orcs")
 	name = "goblin"
@@ -240,6 +249,8 @@
 	ADD_TRAIT(src, TRAIT_CRITICAL_WEAKNESS, TRAIT_GENERIC)
 	ADD_TRAIT(src, TRAIT_BREADY, TRAIT_GENERIC)
 	ADD_TRAIT(src, TRAIT_LEECHIMMUNE, INNATE_TRAIT)
+	if(prob(80)) // It is funnier that way, I swear
+		ADD_TRAIT(src, TRAIT_HEAVYARMOR, TRAIT_GENERIC)
 	if(is_species(src, /datum/species/goblin/sea))
 		ADD_TRAIT(src, TRAIT_NOBREATH, TRAIT_GENERIC)
 	ADD_TRAIT(src, TRAIT_TOXIMMUNE, TRAIT_GENERIC)
@@ -340,9 +351,8 @@
 			if(prob(80))
 				head = /obj/item/clothing/head/roguetown/helmet/leather/goblin
 		if(5) //heavy armored sword/flail/shields
-			ADD_TRAIT(src, TRAIT_HEAVYARMOR, TRAIT_GENERIC)
 			if(prob(30))
-				armor = /obj/item/clothing/suit/roguetown/armor/plate/half/iron/goblin
+				armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/iron/goblin
 			else
 				armor = /obj/item/clothing/suit/roguetown/armor/leather/goblin
 			if(prob(80))
@@ -365,11 +375,12 @@
 	H.adjust_skillrank(/datum/skill/combat/wrestling, 2, TRUE) // Trash mob
 	H.adjust_skillrank(/datum/skill/misc/swimming, 2, TRUE)
 	H.adjust_skillrank(/datum/skill/misc/climbing, 2, TRUE)
-        
+
 //////////////////   INVADER ZIM	//////////////////
 
 /obj/structure/gob_portal
-	name = "Gob Portal"
+	name = "gob portal"
+	desc = "A bright portal torn through the fabric of the world. This can't be good."
 	icon = 'icons/roguetown/misc/structure.dmi'
 	icon_state = "shitportal"
 	max_integrity = 200

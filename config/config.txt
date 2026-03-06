@@ -56,6 +56,9 @@ ENABLE_LOCALHOST_RANK
 ## Uncomment to enable the age prompt system; It asks players for their date of birth upon entry and denies players below a certain age.
 #AGE_PROMPT_SYSTEM
 
+## Log all timers on timer auto reset
+# LOG_TIMERS_ON_BUCKET_RESET
+
 ## Uncomment this entry to have certain jobs require your account to be at least a certain number of days old to select. You can configure the exact age requirement for different jobs by editing
 ## the minimal_player_age variable in the files in folder /code/game/jobs/job/.. for the job you want to edit. Set minimal_player_age to 0 to disable age requirement for that job.
 ## REQUIRES the database set up to work. Keep it hashed if you don't have a database set up.
@@ -470,6 +473,18 @@ MINUTE_CLICK_LIMIT 400
 #CHAT_ANNOUNCE_NEW_GAME
 
 #CHANNEL_ANNOUNCE_NEW_GAME_MESSAGE A new round is beggining!!
+
+## Send a message to chat when a ckey is removed or added to the whitelist
+#CHAT_ANNOUNCE_WHITELIST whitelist
+
+## Send a message to the chat when a ckey  is removed or added to verified
+#CHAT_ANNOUNCE_VERIFY verify
+
+## Send a message to the chat when a ckey  is removed or added to donator
+#CHAT_ANNOUNCE_DONATOR donator
+
+## Chat which you are allowed to add / remove ckeys to the whitelist
+#CHAT_COMMAND_WHITELIST whitelist
 
 ## Allow admin hrefs that don't use the new token system, will eventually be removed
 DEBUG_ADMIN_HREFS

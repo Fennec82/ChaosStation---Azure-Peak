@@ -1,6 +1,6 @@
 /// Shows round end popup with all kind of statistics
 /client/proc/show_round_stats(featured_stat)
-	if(SSticker.current_state != GAME_STATE_FINISHED && !check_rights(R_ADMIN))
+	if(SSticker.current_state != GAME_STATE_FINISHED && !check_rights(R_ADMIN|R_DEBUG))
 		return
 
 	var/list/data = list()
@@ -165,8 +165,6 @@
 	data += "<font color='#4492a5'><span class='bold'>Fish Caught:</span></font> [GLOB.azure_round_stats[STATS_FISH_CAUGHT]]<br>"
 	data += "<font color='#836033'><span class='bold'>Trees Felled:</span></font> [GLOB.azure_round_stats[STATS_TREES_CUT]]<br>"
 	data += "<font color='#af2323'><span class='bold'>Organs Eaten:</span></font> [GLOB.azure_round_stats[STATS_ORGANS_EATEN]]<br>"
-	data += "<font color='#afa623'><span class='bold'>Locks Picked:</span></font> [GLOB.azure_round_stats[STATS_LOCKS_PICKED]]<br>"
-	data += "<font color='#af2379'><span class='bold'>Kisses Made:</span></font> [GLOB.azure_round_stats[STATS_KISSES_MADE]]<br>"
 	data += "</div>"
 	data += "</div></div>"
 	data += "</div>"
@@ -200,7 +198,7 @@
 	// Right column	- Way too many races, so they've been thrown together.
 	data += "<div style='display: table-cell; width: 50%; vertical-align: top; padding: 0 10px;'>"
 	data += "<font color='#808080'><span class='bold'>Dwarves:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_DWARVES]]<br>"
-	data += "<font color='#87CEEB'><span class='bold'>Pure & Half-Elves:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_WOOD_ELVES] + GLOB.azure_round_stats[STATS_ALIVE_HALF_ELVES]]<br>"
+	data += "<font color='#87CEEB'><span class='bold'>Pure & Half-Elves:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_WOOD_ELVES] + GLOB.azure_round_stats[STATS_ALIVE_SUN_ELVES] + GLOB.azure_round_stats[STATS_ALIVE_HALF_ELVES]]<br>"
 	data += "<font color='#7729af'><span class='bold'>Dark Elves:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_DARK_ELVES]]<br>"
 	data += "<font color='#e7e3d9'><span class='bold'>Aasimars:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_AASIMAR]]<br>"
 	data += "<font color='#DC143C'><span class='bold'>Tieflings:</span></font> [GLOB.azure_round_stats[STATS_ALIVE_TIEFLINGS]]<br>"
@@ -515,6 +513,7 @@
 			data += "<div style='margin-bottom: 4px;'><font color='#e67e22'>Noble Estates Revenue: </font>[GLOB.azure_round_stats[STATS_NOBLE_INCOME_TOTAL]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#ce9d15'>Rural Taxes Collected: </font>[GLOB.azure_round_stats[STATS_RURAL_TAXES_COLLECTED]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#f5c02e'>Royal Taxes Collected: </font>[GLOB.azure_round_stats[STATS_TAXES_COLLECTED]]</div>"
+			data += "<div style='margin-bottom: 4px;'><font color='#b2d33d'>Interest Issued: </font>[GLOB.azure_round_stats[STATS_BANK_INTEREST_CREATED]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#8fa36a'>Mammons Deposited: </font>[GLOB.azure_round_stats[STATS_MAMMONS_DEPOSITED]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#90b34f'>Stockpile Exports: </font>[GLOB.azure_round_stats[STATS_STOCKPILE_EXPORTS_VALUE]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#a2b337'>Bought from Stockpile: </font>[GLOB.azure_round_stats[STATS_STOCKPILE_REVENUE]]</div>"
@@ -558,7 +557,8 @@
 			data += "<div style='margin-bottom: 4px;'><font color='#db9a59'>Trade Value Exported: </font>[GLOB.azure_round_stats[STATS_TRADE_VALUE_EXPORTED]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#dfbf57'>Trade Value Imported: </font>[GLOB.azure_round_stats[STATS_TRADE_VALUE_IMPORTED]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#c0b283'>GOLDFACE Imports: </font>[GLOB.azure_round_stats[STATS_GOLDFACE_VALUE_SPENT]]</div>"
-			data += "<div style='margin-bottom: 4px;'><font color='#c0b283'>SILVERFACE Imports: </font>[GLOB.azure_round_stats[STATS_SILVERFACE_VALUE_SPENT]]</div>"
+			data += "<div style='margin-bottom: 4px;'><font color='#c0c0c0'>SILVERFACE Imports: </font>[GLOB.azure_round_stats[STATS_SILVERFACE_VALUE_SPENT]]</div>"
+			data += "<div style='margin-bottom: 4px;'><font color='#b87333'>COPPERFACE Imports: </font>[GLOB.azure_round_stats[STATS_COPPERFACE_VALUE_SPENT]]</div>"
 			data += "<div style='margin-bottom: 4px;'><font color='#b5a642'>PURITY Imports: </font>[GLOB.azure_round_stats[STATS_PURITY_VALUE_SPENT]]</div>"
 			data += "<div><font color='#7495d3'>Peddler Revenue: </font>[GLOB.azure_round_stats[STATS_PEDDLER_REVENUE]]</div>"
 			data += "</div></div>"

@@ -90,10 +90,9 @@
 
 	SEND_SIGNAL(src, COMSIG_MOB_LOGIN)
 	log_message("Client [key_name(src)] has taken ownership of mob [src]([src.type])", LOG_OWNERSHIP)
-	enable_client_mobs_in_contents(client)
+	if(isliving(src))
+		enable_client_mobs_in_contents(client)
 	SEND_SIGNAL(src, COMSIG_MOB_CLIENT_LOGIN, client)
-	if(client)
-		client.preload_music()
 
 /**
   * Checks if the attached client is an admin and may deadmin them

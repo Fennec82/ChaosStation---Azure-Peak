@@ -29,6 +29,11 @@
 	grid_width = 64
 	grid_height = 64
 
+/obj/item/restraints/legcuffs/beartrap/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Activate in your hand to prime it. Depending on its age, this might take multiple attempts to successfully prepare.")
+	. += span_info("Beartraps can be safely disarmed by either left-clicking them with a open hand, or - at the cost of some durability - left-clicking them with a weapon.")
+
 /obj/item/restraints/legcuffs/beartrap/attack_hand(mob/user)
 	if(iscarbon(user) && armed && isturf(loc))
 		var/mob/living/carbon/C = user
@@ -75,6 +80,10 @@
 	..()
 
 /obj/item/restraints/legcuffs/beartrap/attackby(obj/item/W, mob/user)
+	if(istype(W, /obj/item/natural/dirtclod) && armed)
+		var/skill = user.get_skill_level(/datum/skill/craft/traps)
+		alpha = (90 - skill * 5)
+		qdel(W)
 	if(W.force && armed)
 		user.visible_message("<span class='warning'>[user] triggers \the [src] with [W].</span>", \
 				"<span class='danger'>I trigger \the [src] with [W]!</span>")

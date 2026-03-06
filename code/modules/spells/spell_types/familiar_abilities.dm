@@ -387,21 +387,19 @@
 
 /obj/effect/proc_holder/spell/self/phantom_flicker/cast(list/targets, mob/living/simple_animal/pet/familiar/ripplefox/user)
 	. = ..()
-
 	var/mob/living/simple_animal/pet/familiar/ripplefox/illusory_familiar = new user.type(user.loc)
-	user.visible_message(span_notice("[user.name] blurs and darts away in two directions at once!"))
-
 	illusory_familiar.familiar_summoner = user
 	illusory_familiar.fully_replace_character_name(null, user.name)
-
+	animate(user, alpha = 0, time = 1, easing = EASE_IN) //should be seamless, hopefully
 	// Schedule deletion safely with global context
 	addtimer(CALLBACK(GLOBAL_PROC, /proc/delete_illusory_fam, illusory_familiar, user), 200)
-
+	user.mob_timers[MT_INVISIBILITY] = world.time + 20 SECONDS
+	addtimer(CALLBACK(user, TYPE_PROC_REF(/mob/living, update_sneak_invis), TRUE), 200)
 	return TRUE
 
 /proc/delete_illusory_fam(var/mob/living/simple_animal/pet/familiar/ripplefox/illusory_familiar, var/mob/user)
 	if(illusory_familiar && !QDELETED(illusory_familiar))
-		user.visible_message(span_notice("[illusory_familiar.name] flickers and vanishes into nothingness."))
+		illusory_familiar.visible_message(span_notice("[illusory_familiar.name] flickers and vanishes into nothingness."))
 		qdel(illusory_familiar)
 
 /obj/effect/proc_holder/spell/self/lurking_step
@@ -496,6 +494,7 @@
 	name = "Verdant Veil"
 	desc = "Shrouds nearby allies in illusionary invisibility, broken if they move or act."
 	recharge_time = 30 SECONDS
+	range = 1
 
 //I wanted a long duration aoe invisibility that would be broken by movement. But I can't make it work so, short duration it is.
 /obj/effect/proc_holder/spell/self/verdant_veil/cast(list/targets, mob/living/simple_animal/pet/familiar/hollow_antlerling/user)
@@ -503,7 +502,7 @@
 	to_chat(user, span_notice("You exhale a shimmering cloud of forest illusion..."))
 	user.visible_message(span_warning("[user.name] releases a swirl of glowing leaves!"), span_notice("You feel the forest's stillness wrap around you."))
 
-	for (var/mob/living/nearby_mob in range(1, user))
+	for (var/mob/living/nearby_mob in range(range, user))
 		if (nearby_mob == user || isobserver(nearby_mob))
 			continue
 

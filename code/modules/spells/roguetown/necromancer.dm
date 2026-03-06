@@ -1,6 +1,8 @@
 /obj/effect/proc_holder/spell/invoked/bonechill
 	name = "Bone Chill"
-	overlay_state = "raiseskele"
+	desc = "Chill the chosen target with a burst of necrotic magicka. </br>Applies a strong slowdown effect to the chosen target, alongside further reducing their Strength and Speed."
+	cost = 3
+	overlay_state = "profane"
 	releasedrain = 30
 	chargetime = 5
 	range = 7
@@ -8,11 +10,14 @@
 	movement_interrupt = FALSE
 	chargedloop = null
 	sound = 'sound/magic/whiteflame.ogg'
+	spell_tier = 2
+	chargedloop = /datum/looping_sound/invokegen
 	associated_skill = /datum/skill/magic/arcane
 	gesture_required = TRUE // Potential offensive use, need a target
 	antimagic_allowed = TRUE
 	recharge_time = 15 SECONDS
 	miracle = FALSE
+	zizo_spell = TRUE
 
 /obj/effect/proc_holder/spell/invoked/bonechill/cast(list/targets, mob/living/user)
 	..()
@@ -37,6 +42,7 @@
 
 /obj/effect/proc_holder/spell/invoked/eyebite
 	name = "Eyebite"
+	desc = "Manipulate the shadows within a chosen target's eye into jagged, gnashing teeth. </br>Temporarily blinds the chosen target, while moderately damaging them."
 	overlay_state = "raiseskele"
 	releasedrain = 30
 	chargetime = 15
@@ -64,8 +70,9 @@
 	return TRUE
 
 /obj/effect/proc_holder/spell/invoked/raise_undead_formation
-	name = "Raise Formation"
-	desc = "Raises a formation of undead skeleton. Inferior shamblers. Husks in everything but zeal."
+	name = "Raise Undead Formation"
+	desc = "Invoke forbidden magicka to summon a cohort of mindless, shambling skeletons. </br>Mindless skeletons can be given orders to guard, patrol, and attack by their \
+	summoner. </br>These skeletons are weaker than their more complex-jointed counterparts, but are harder to incapacitate."
 	clothes_req = FALSE
 	overlay_state = "animate"
 	range = 7
@@ -87,6 +94,11 @@
 /obj/effect/proc_holder/spell/invoked/raise_undead_formation/cast(list/targets, mob/living/user)
 	..()
 
+	if(istype(get_area(user), /area/rogue/indoors/ravoxarena))
+		to_chat(user, span_userdanger("I reach for outer help, but something rebukes me! This challenge is only for me to overcome!"))
+		revert_cast()
+		return FALSE
+	
 	var/turf/T = get_turf(targets[1])
 	if(!isopenturf(T))
 		to_chat(user, span_warning("The targeted location is blocked. My summon fails to come forth."))
@@ -94,36 +106,38 @@
 
 	var/skeleton_roll
 
-	var/list/turf/target_turfs = list(T)
-	if(usr.dir == NORTH || usr.dir == SOUTH)
-		target_turfs += get_step(T, EAST)
-		target_turfs += get_step(T, WEST)
-	else
-		target_turfs += get_step(T, NORTH)
-		target_turfs += get_step(T, SOUTH)
-
 	for(var/i = 1 to to_spawn)
 		if(i > to_spawn)
 			i = 1
 
-		var/t_turf = target_turfs[i]
+		if(i > 1)
+			if(user.dir == NORTH || user.dir == SOUTH)
+				if(prob(50))
+					T = get_step(T, EAST)
+				else
+					T = get_step(T, WEST)
+			else
+				if(prob(50))
+					T = get_step(T, NORTH)
+				else
+					T = get_step(T, SOUTH)
 
-		if(!isopenturf(t_turf))
+		if(!isopenturf(T))
 			continue
 
-		new /obj/effect/temp_visual/bluespace_fissure(t_turf)
+		new /obj/effect/temp_visual/bluespace_fissure(T)
 		skeleton_roll = rand(1,100)
 		switch(skeleton_roll)
 			if(1 to 20)
-				new /mob/living/simple_animal/hostile/rogue/skeleton/axe(t_turf, user, cabal_affine)
+				new /mob/living/simple_animal/hostile/rogue/skeleton/axe(T, user, cabal_affine)
 			if(21 to 40)
-				new /mob/living/simple_animal/hostile/rogue/skeleton/spear(t_turf, user, cabal_affine)
+				new /mob/living/simple_animal/hostile/rogue/skeleton/spear(T, user, cabal_affine)
 			if(41 to 60)
-				new /mob/living/simple_animal/hostile/rogue/skeleton/guard(t_turf, user, cabal_affine)
+				new /mob/living/simple_animal/hostile/rogue/skeleton/guard(T, user, cabal_affine)
 			if(61 to 80)
-				new /mob/living/simple_animal/hostile/rogue/skeleton/bow(t_turf, user, cabal_affine)
+				new /mob/living/simple_animal/hostile/rogue/skeleton/bow(T, user, cabal_affine)
 			if(81 to 100)
-				new /mob/living/simple_animal/hostile/rogue/skeleton(t_turf, user, cabal_affine)
+				new /mob/living/simple_animal/hostile/rogue/skeleton(T, user, cabal_affine)
 	return TRUE
 
 /obj/effect/proc_holder/spell/invoked/raise_undead_formation/necromancer
@@ -135,7 +149,8 @@
 
 /obj/effect/proc_holder/spell/invoked/raise_undead_guard
 	name = "Conjure Undead"
-	desc = "Raises an undead guard in your servitude."
+	desc = "Invoke forbidden magicka to summon a mindless, shambling skeleton. </br>Mindless skeletons can be given orders to guard, patrol, and attack by their \
+	summoner. </br>These skeletons are weaker than their more complex-jointed counterparts, but are harder to incapacitate."
 	clothes_req = FALSE
 	overlay_state = "animate"
 	range = 7
@@ -154,6 +169,11 @@
 /obj/effect/proc_holder/spell/invoked/raise_undead_guard/cast(list/targets, mob/living/user)
 	..()
 
+	if(istype(get_area(user), /area/rogue/indoors/ravoxarena))
+		to_chat(user, span_userdanger("I reach for outer help, but something rebukes me! This challenge is only for me to overcome!"))
+		revert_cast()
+		return FALSE
+		
 	var/turf/T = get_turf(targets[1])
 	if(!isopenturf(T))
 		to_chat(user, span_warning("The targeted location is blocked. My summon fails to come forth."))
@@ -162,7 +182,7 @@
 	new /obj/effect/temp_visual/gib_animation(T, "gibbed-h")
 	var/mob/living/skeleton_new = new /mob/living/carbon/human/species/skeleton/npc/bogguard(T, user)
 	spawn(11) //Ashamed of this but I hate how after_creation() uses spawn too and I'm not making a timer for this. Proc needs a look-over. - Ryan
-		skeleton_new.faction = list("[user.mind.current.real_name]_faction")
+		skeleton_new.faction |= list("cabal", "[user.mind.current.real_name]_faction")
 	return TRUE
 
 
@@ -200,7 +220,7 @@
 		revert_cast()
 		return FALSE
 
-	target.faction = list("[user.mind.current.real_name]_faction") //only user faction
+	target.faction |= list("cabal", "[user.mind.current.real_name]_faction")
 	target.visible_message(span_notice("[target] turns its head to pay heed to [user]!"))
 	if(!target.ai_controller)
 		target.ai_controller = /datum/ai_controller/undead
@@ -232,7 +252,9 @@
 
 /obj/effect/proc_holder/spell/invoked/gravemark
 	name = "Gravemark"
-	desc = "Adds or removes a target from the list of allies exempt from your undead's aggression."
+	desc = "Adjusts a chosen target's status, allowing you to denote them as an ally to the undead creechers under your command. </br>Marked allies \
+	will not be targeted nor attacked by any undead creechers under your command. </br>Casting the 'Gravemark' spell on them again will mark them as \
+	an enemy, causing all undead creechers under your command to become hostile against them."
 	overlay_state = "raiseskele"
 	range = 7
 	warnie = "sydwarning"
@@ -251,12 +273,13 @@
 			to_chat(user, span_warning("It would be unwise to make an enemy of your own skeletons."))
 			return FALSE
 		if(target.mind && target.mind.current)
-			if (faction_tag in target.mind.current.faction)
-				target.mind.current.faction -= faction_tag
+			if (faction_tag in target.mind?.current.faction)
+				target.mind?.current.faction -= faction_tag
 				user.say("Hostis declaratus es.")
 			else
-				target.mind.current.faction += faction_tag
+				target.mind?.current.faction += faction_tag
 				user.say("Amicus declaratus es.")
+				target.notify_faction_change()
 		else if(istype(target, /mob/living/simple_animal))
 			if (faction_tag in target.faction)
 				target.faction -= faction_tag
@@ -264,5 +287,9 @@
 			else
 				target.faction |= faction_tag
 				user.say("Amicus declaratus es.")
+				target.notify_faction_change()
 		return TRUE
 	return FALSE
+
+/obj/effect/proc_holder/spell/invoked/gravemark/no_sprite
+	overlay_state = ""

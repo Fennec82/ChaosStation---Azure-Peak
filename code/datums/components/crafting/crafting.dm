@@ -27,6 +27,8 @@
 	var/display_craftable_only = TRUE
 	var/display_compact = TRUE
 	var/showonlycraftable = TRUE
+	var/last_surroundings_hash
+	var/list/cached_craftability
 
 
 
@@ -35,8 +37,8 @@
 	get_surroundings - takes a list of things and makes a list of key-types to values-amounts of said type in the list
 	check_contents - takes a recipe and a key-type list and checks if said recipe can be done with available stuff
 	check_tools - takes recipe, a key-type list, and a user and checks if there are enough tools to do the stuff, checks bugs one level deep
-	construct_item - takes a recipe and a user, call all the checking procs, calls do_after, 
-	checks all the things again, calls del_reqs, creates result, 
+	construct_item - takes a recipe and a user, call all the checking procs, calls do_after,
+	checks all the things again, calls del_reqs, creates result,
 	calls CheckParts of said result with argument being list returned by del_reqs
 	del_reqs - takes recipe and a user, loops over the recipes reqs var and tries to find everything in the list make by get_environment and delete it/add to parts list, then returns the said list
 */
@@ -54,12 +56,12 @@
 					if(!R.subtype_reqs && (B in subtypesof(A)))
 						continue
 					if (R.blacklist.Find(B))
-						testing("foundinblacklist")
+
 						continue
 					if(contents[B] >= R.reqs[A])
 						continue main_loop
 					else
-						testing("removecontent")
+
 						needed_amount -= contents[B]
 						if(needed_amount <= 0)
 							continue main_loop
@@ -86,6 +88,10 @@
 				if(AM.flags_1 & HOLOGRAM_1)
 					continue
 				. += AM
+				var/list/crafting_items = AM.get_crafting_contents()
+				if(crafting_items)
+					for(var/atom/movable/crafting_item as anything in crafting_items)
+						. += crafting_item
 	for(var/slot in list(SLOT_R_STORE, SLOT_L_STORE))
 		. += user.get_item_by_slot(slot)
 
@@ -160,10 +166,16 @@
 	return TRUE
 
 /atom/proc/OnCrafted(dirin, mob/user)
-	SEND_SIGNAL(user, COMSIG_ITEM_CRAFTED, user, type)
+	if(user)
+		SEND_SIGNAL(user, COMSIG_ITEM_CRAFTED, user, type)
+		record_featured_stat(FEATURED_STATS_CRAFTERS, user)
+
 	dir = dirin
 	record_featured_stat(FEATURED_STATS_CRAFTERS, user)
+	record_round_statistic(STATS_CRAFTED_ITEMS)
 	record_featured_object_stat(FEATURED_STATS_CRAFTED_ITEMS, name)
+	if(istype(src, /obj/item/rogueore/gold))
+		record_round_statistic(STATS_GOLD_TRANSMUTED)
 	return
 
 /obj/item/OnCrafted(dirin)
@@ -239,11 +251,11 @@
 				continue
 			if(R.structurecraft && istype(S, R.structurecraft))
 				continue
-			if(S.density)
+			if(S.density && !(R.ignoredensity))
 				to_chat(user, span_warning("Something is in the way."))
 				return
 		for(var/obj/machinery/M in T)
-			if(M.density)
+			if(M.density && !(R.ignoredensity))
 				to_chat(user, span_warning("Something is in the way."))
 				return
 	if(R.req_table)
@@ -282,6 +294,8 @@
 						var/mob/living/L = user
 						if(L.STAINT > 10)
 							prob2craft += ((10-L.STAINT)*-1)*2
+						if(HAS_TRAIT(L, TRAIT_INTELLECTUAL) && L.STAINT > 8)
+							prob2craft += 5
 					prob2craft = CLAMP(prob2craft, 0, 99)
 					if(!prob(prob2craft))
 						if(user.client?.prefs.showrolls)
@@ -376,6 +390,9 @@
 		for(var/A in R.reqs)
 			amt = R.reqs[A]
 			surroundings = get_environment(user)
+			for(var/obj/item/I in surroundings)
+				if(!I.can_craft_with())
+					surroundings -= I
 			for(var/atom/movable/IS in surroundings)
 				if(!R.subtype_reqs && (IS.type in subtypesof(A)))
 					surroundings.Remove(IS)
@@ -495,19 +512,29 @@
 /datum/component/personal_crafting/ui_data(mob/user)
 	var/list/data = list()
 	data["busy"] = busy
+	data["showonlycraftable"] = showonlycraftable
 
 	var/list/surroundings = get_surroundings(user)
+	var/new_hash = list2params(surroundings["other"])
+
+	if(new_hash == last_surroundings_hash && cached_craftability)
+		data["craftability"] = cached_craftability
+		return data
+
+	last_surroundings_hash = new_hash
 	var/list/craftability = list()
 	for(var/rec in GLOB.crafting_recipes)
 		var/datum/crafting_recipe/R = rec
 
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes)) //User doesn't actually know how to make this.
 			continue
+		if(R.required_tech_node && !R.tech_unlocked)
+			continue
 
 		craftability[R.name] = check_contents(R, surroundings)
 
+	cached_craftability = craftability
 	data["craftability"] = craftability
-	data["showonlycraftable"] = showonlycraftable
 	return data
 
 /datum/component/personal_crafting/ui_static_data(mob/user)
@@ -522,10 +549,12 @@
 
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes)) //User doesn't actually know how to make this.
 			continue
+		if(R.required_tech_node && !R.tech_unlocked)
+			continue
 		var/category
 		if(R.skillcraft)
-			var/datum/skill/S = new R.skillcraft()
-			category = S.name
+			var/datum/skill/S = R.skillcraft
+			category = initial(S.name)
 		else
 			category = "Other"
 		if(isnull(crafting_recipes[category]))
@@ -575,6 +604,7 @@
 	data["ref"] = "[REF(R)]"
 	data["path"] = R.type
 	data["sellprice"] = R.sellprice
+	data["aliases"] = R.aliases
 	var/req_text = ""
 	var/tool_text = ""
 	var/catalyst_text = ""
@@ -604,6 +634,14 @@
 
 	data["craftingdifficulty"] = skill_to_string(R.craftdiff)
 
+	if(islist(R.result))
+		for(var/a in R.result)
+			var/atom/A = a 
+			if(!(findtext(data["aliases"],A.name)))
+				data["aliases"] += A.name + " "
+	else
+		var/atom/A = R.result
+		data["aliases"] += A.name
 
 	return data
 
@@ -636,6 +674,8 @@
 	for(var/rec in GLOB.crafting_recipes)
 		var/datum/crafting_recipe/R = rec
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes)) //User doesn't actually know how to make this.
+			continue
+		if(R.required_tech_node && !R.tech_unlocked)
 			continue
 
 		if(check_contents(R, surroundings))

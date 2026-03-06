@@ -2,7 +2,8 @@ GLOBAL_LIST_EMPTY(biggates)
 
 /obj/structure/gate
 	name = "gate"
-	desc = "A strong steel gate."
+	desc = "A strong steel gate decorated ornately with vivid images. Something important \
+	must be behind it."
 	icon = 'icons/roguetown/misc/gate.dmi'
 	icon_state = "gate1"
 	density = TRUE
@@ -20,6 +21,11 @@ GLOBAL_LIST_EMPTY(biggates)
 	attacked_sound = list('sound/combat/hits/onmetal/sheet (1).ogg', 'sound/combat/hits/onmetal/sheet (2).ogg')
 	var/obj/structure/attached_to
 
+/obj/structure/gate/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Most gates are traditionally linked to a lever or winch. Left-clicking the right lever or winch will open the gate that they're connected to.")
+	. += span_info("While a length process, gates can also be bypassed through destroying them with enough strikes. Bombs of blastpowder in particular excel at damaging these structures.")
+
 /obj/structure/gate/preopen
 	icon_state = "gate0"
 
@@ -28,6 +34,9 @@ GLOBAL_LIST_EMPTY(biggates)
 	INVOKE_ASYNC(src, PROC_REF(open))
 
 /obj/structure/gate/bars
+	desc = "A large portculis, designed to close vertically and to be extremely difficult to break \
+	through. When you aren't sure if you'll win a fight, try putting three inches of steel \
+	between you and your enemy."
 	icon_state = "bar1"
 	base_state = "bar"
 	opacity = FALSE
@@ -154,6 +163,10 @@ GLOBAL_LIST_EMPTY(biggates)
 	var/gid
 	var/obj/structure/gate/attached_gate
 
+/obj/structure/winch/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Left-click the winch to open whatever gate it might be linked to. The time needed to complete this action scales with your character's Strength.")
+
 /obj/structure/winch/Initialize()
 	. = ..()
 	return INITIALIZE_HINT_LATELOAD
@@ -189,7 +202,7 @@ GLOBAL_LIST_EMPTY(biggates)
 /obj/structure/gate/psy_vault
 	name = "\improper HIS vault"
 	redstone_id = "swamp_psy_dungeon_hour"
-	max_integrity = "9999"
+	max_integrity = 9999
 
 /obj/structure/gate/psy_vault/Initialize()
 	. = ..()

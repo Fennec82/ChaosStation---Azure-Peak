@@ -12,6 +12,11 @@
 	if(!length(mob_descriptors))
 		mob_descriptors = null
 
+/mob/living/proc/get_descriptor_type(var/desired_type)
+	for(var/datum/mob_descriptor/descriptor as anything in mob_descriptors)
+		if(ispath(descriptor, desired_type))
+			return MOB_DESCRIPTOR(descriptor)
+
 /mob/living/proc/clear_mob_descriptors()
 	mob_descriptors = null
 
@@ -85,7 +90,7 @@
 	var/list/lines = list()
 	var/list/desc_copy = descriptors.Copy()
 
-	var/first_line = build_coalesce_description(desc_copy, described, list(MOB_DESCRIPTOR_SLOT_HEIGHT, MOB_DESCRIPTOR_SLOT_BODY, MOB_DESCRIPTOR_SLOT_STATURE, MOB_DESCRIPTOR_SLOT_FACE_SHAPE, MOB_DESCRIPTOR_SLOT_FACE_EXPRESSION), "You see %DESC1%, %DESC2% %DESC3% with %DESC4%, %DESC5%")
+	var/first_line = build_coalesce_description(desc_copy, described, list(MOB_DESCRIPTOR_SLOT_HEIGHT, MOB_DESCRIPTOR_SLOT_BODY, MOB_DESCRIPTOR_SLOT_STATURE, MOB_DESCRIPTOR_SLOT_FACE_SHAPE, MOB_DESCRIPTOR_SLOT_FACE_EXPRESSION), "You see %DESC1%, %DESC2% %DESC3% with %DESC4%, %DESC5%.")
 	if(first_line)
 		lines += first_line
 
@@ -193,15 +198,7 @@
 				they_replace = "he"
 				man_replace = "man"
 				him_replace = "him"
-			if (HE_HIM_F)
-				they_replace = "he"
-				man_replace = "man"
-				him_replace = "him"
 			if (SHE_HER)
-				they_replace = "she"
-				man_replace = "woman"
-				him_replace = "her"
-			if (SHE_HER_M)
 				they_replace = "she"
 				man_replace = "woman"
 				him_replace = "her"
@@ -209,14 +206,11 @@
 				they_replace = "they"
 				man_replace = "person"
 				him_replace = "them"
-			if (THEY_THEM_F)
-				they_replace = "they"
-				man_replace = "person"
-				him_replace = "them"
 			if (IT_ITS)
 				they_replace = "it"
 				man_replace = "creacher"
 				him_replace = "it"
+
 	// LETHALSTONE EDIT END
 	string = replacetext(string, "%THEY%", they_replace)
 	if(they_replace == "they")

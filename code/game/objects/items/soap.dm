@@ -10,14 +10,14 @@
 	item_flags = NOBLUDGEON
 	throwforce = 0
 	throw_speed = 1
-	throw_range = 7
+	throw_range = 1
 	grind_results = list(/datum/reagent/lye = 10)
 	var/cleanspeed = 20 //as fast as 5 arcyne Prestidigitation
 	var/uses = 100
 
 /obj/item/soap/ComponentInitialize()
 	. = ..()
-	AddComponent(/datum/component/slippery, 80)
+	AddComponent(/datum/component/slippery, 10)
 
 /obj/item/soap/examine(mob/user)
 	. = ..()
@@ -47,7 +47,7 @@
 /obj/item/soap/afterattack(atom/target, mob/user, proximity)
 	. = ..()
 	var/turf/bathspot = get_turf(target)
-	if(ishuman(target) && istype(bathspot, /turf/open/water/bath))
+	if(ishuman(target) && (istype(bathspot, /turf/open/water/bath) || locate(/obj/structure/hotspring) in bathspot))
 		return
 	if(!proximity || !check_allowed_items(target, target_self=1))
 		return
@@ -87,7 +87,7 @@
 
 /obj/item/soap/attack(mob/target, mob/user)
 	var/turf/bathspot = get_turf(target)
-	if(!istype(bathspot, /turf/open/water/bath))
+	if(!istype(bathspot, /turf/open/water/bath) && !locate(/obj/structure/hotspring) in bathspot)
 		return
 	if(ishuman(target))
 		visible_message(span_info("[user] begins washing [target] with the [src]."))

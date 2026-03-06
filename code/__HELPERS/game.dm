@@ -320,17 +320,19 @@
 	return O
 
 /proc/remove_images_from_clients(image/I, list/show_to)
-	for(var/client/C in show_to)
+	for(var/client/C as anything in show_to)
 		C.images -= I
 
 /proc/flick_overlay(image/I, list/show_to, duration)
-	for(var/client/C in show_to)
+	if(!show_to || !length(show_to))
+		return
+	for(var/client/C as anything in show_to)
 		C.images += I
 	addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(remove_images_from_clients), I, show_to), duration, TIMER_CLIENT_TIME)
 
 /proc/flick_overlay_view(image/I, atom/target, duration) //wrapper for the above, flicks to everyone who can see the target atom
 	var/list/viewing = list()
-	for(var/m in viewers(target))
+	for(var/m in get_hearers_in_view(world.view, target, RECURSIVE_CONTENTS_CLIENT_MOBS))
 		var/mob/M = m
 		if(M.client)
 			viewing += M.client

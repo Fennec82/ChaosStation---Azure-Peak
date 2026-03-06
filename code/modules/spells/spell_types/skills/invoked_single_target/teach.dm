@@ -3,7 +3,7 @@
 	name = "The Tutor's Calling"
 	desc = "You can teach a skill or language to another person, provided they are not more skilled than you in it. \n\
 	You cannot teach the same person twice. Teaching takes 30 seconds, and requires both you and your student to be focused on the lesson."
-	overlay_state = "book3"
+	overlay_state = "knowledge"
 	releasedrain = 50
 	chargedrain = 0
 	chargetime = 0
@@ -62,6 +62,7 @@
 	//Languages
 	/datum/language/aavnic,
 	/datum/language/celestial,
+	/datum/language/raneshi,
 	/datum/language/draconic,
 	/datum/language/dwarvish,
 	/datum/language/elvish,
@@ -70,19 +71,21 @@
 	/datum/language/gronnic,
 	/datum/language/hellspeak,
 	/datum/language/kazengunese,
+	/datum/language/lingyuese,
+	/datum/language/undercommon,
 	/datum/language/orcish,
-	/datum/language/otavan	
+	/datum/language/otavan
     )
 	for(var/i = 1, i <= skill_choices.len, i++)
 		var/datum/skill/learn_item = skill_choices[i]
-		if((L.get_skill_level(learn_item) < SKILL_LEVEL_NOVICE) && !(learn_item in list(/datum/language/aavnic, /datum/language/celestial, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/orcish, /datum/language/otavan)))
+		if((L.get_skill_level(learn_item) < SKILL_LEVEL_NOVICE) && !(learn_item in list(/datum/language/aavnic, /datum/language/celestial, /datum/language/raneshi, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/lingyuese, /datum/language/orcish, /datum/language/otavan)))
 			continue //skip if they don't have enough skill
 		if(L.get_skill_level(learn_item) > SKILL_LEVEL_EXPERT)
 			continue //skip if they know too much
 		if (L.has_language(learn_item))
 			continue //skip if they know the language
 		choices["[learn_item.name]"] = learn_item
-	
+
 
 	var/teachingtime = 30 SECONDS
 
@@ -103,7 +106,7 @@
 					to_chat(L, span_warning("There's no way I could handle all that knowledge!"))
 					to_chat(usr, span_warning("My student cannot handle that much knowledge at once!"))
 					return // cannot teach the same student twice
-				if(!(item in list(/datum/skill/misc/music, /datum/skill/craft/cooking, /datum/skill/craft/sewing, /datum/skill/misc/lockpicking, /datum/skill/misc/climbing, /datum/language/aavnic, /datum/language/celestial, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/orcish, /datum/language/otavan)) && L.get_skill_level(item) < SKILL_LEVEL_NOVICE)
+				if(!(item in list(/datum/skill/misc/music, /datum/skill/craft/cooking, /datum/skill/craft/sewing, /datum/skill/misc/lockpicking, /datum/skill/misc/climbing, /datum/language/aavnic, /datum/language/celestial, /datum/language/raneshi, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/lingyuese, /datum/language/orcish, /datum/language/otavan)) && L.get_skill_level(item) < SKILL_LEVEL_NOVICE)
 					to_chat(L, span_warning("I cannot understand the lesson on [item.name], I need to get more skilled first!"))
 					to_chat(usr, span_warning("I try teaching [L] [item.name] but my student couldnt grasp the lesson!"))
 					return // some basic skill will not require you novice level
@@ -118,12 +121,12 @@
 				else
 					to_chat(L, span_notice("[usr] starts teaching me about [item.name]!"))
 					to_chat(usr, span_notice("[L] gets to listen carefully to my lesson about [item.name]."))
-					if((item in list(/datum/language/aavnic, /datum/language/celestial, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/orcish, /datum/language/otavan)))
+					if((item in list(/datum/language/aavnic, /datum/language/celestial, /datum/language/raneshi, /datum/language/draconic, /datum/language/dwarvish, /datum/language/elvish, /datum/language/etruscan, /datum/language/grenzelhoftian, /datum/language/gronnic, /datum/language/hellspeak, /datum/language/kazengunese, /datum/language/lingyuese, /datum/language/orcish, /datum/language/otavan)))
 						if(do_after(usr, teachingtime, target = L))
 							user.visible_message("<font color='yellow'>[user] teaches [L] a lesson.</font>")
 							to_chat(usr, span_notice("My student Learns the language [item.name]!"))
 							L.grant_language(item)
-							ADD_TRAIT(L, TRAIT_STUDENT, "[type]")
+							ADD_TRAIT(L, TRAIT_STUDENT, TRAIT_GENERIC)
 						else
 							to_chat(usr, span_warning("[L] got distracted and wandered off!"))
 							to_chat(L, span_warning("I must be more focused on my studies!"))
@@ -136,7 +139,7 @@
 								user.visible_message("<font color='yellow'>[user] teaches [L] a lesson.</font>")
 								to_chat(usr, span_notice("My student grows a lot more proficient in [item.name]!"))
 								L.adjust_skillrank(item, 2, FALSE)
-								ADD_TRAIT(L, TRAIT_STUDENT, "[type]")
+								ADD_TRAIT(L, TRAIT_STUDENT, TRAIT_GENERIC)
 							else
 								to_chat(usr, span_warning("[L] got distracted and wandered off!"))
 								to_chat(L, span_warning("I must be more focused on my studies!"))
@@ -146,7 +149,7 @@
 								user.visible_message("<font color='yellow'>[user] teaches [L] a lesson.</font>")
 								to_chat(usr, span_notice("My student grows more proficient in [item.name]!"))
 								L.adjust_skillrank(item, 1, FALSE)
-								ADD_TRAIT(L, TRAIT_STUDENT, "[type]")
+								ADD_TRAIT(L, TRAIT_STUDENT, TRAIT_GENERIC)
 							else
 								to_chat(usr, span_warning("[L] got distracted and wandered off!"))
 								to_chat(L, span_warning("I must be more focused on my studies!"))

@@ -144,6 +144,10 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 	var/toggled = FALSE
 	redstone_structure = TRUE
 
+/obj/structure/lever/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Left-click the lever to actuate whatever might be connected to it. The time needed to complete this action scales with your character's Strength.")
+
 /obj/structure/lever/attack_hand(mob/user)
 	if(isliving(user))
 		var/mob/living/L = user
@@ -166,16 +170,16 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 			to_chat(user, span_warning("I need more skill to carve a name into this lever."))
 			return
 		playsound(user, 'sound/misc/wood_saw.ogg', 100, TRUE)
-		user.visible_message("<span class='info'>[user] Carves a name into the lever.</span>")
+		user.visible_message("<span class='info'>[user] carves a name into the lever.</span>")
 		if(do_after(user, 10))
 			var/levername
 			levername = input("What name would you like to carve into the lever?")
 			if (levername)
 				name = levername + "(lever)"
-				desc = "a lever with a name carved into it"
+				desc = "A lever with a name carved into it."
 			else
 				name = "lever"
-				desc = "a lever with a carving scratched out"
+				desc = "A lever with a carving scratched out."
 			playsound(user, 'sound/misc/wood_saw.ogg', 100, TRUE)
 		return
 	else if(istype(item, /obj/item/rogueweapon/chisel/assembly))
@@ -197,6 +201,14 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 /obj/structure/lever/wall
 	icon_state = "leverwall0"
 
+/obj/structure/lever/wall/attack_hand(mob/user)
+	. = ..()
+	icon_state = "leverwall[toggled]"
+
+/obj/structure/lever/wall/onkick(mob/user)
+	. = ..()
+	icon_state = "leverwall[toggled]"
+
 /obj/structure/lever/hidden
 	icon = null
 
@@ -204,7 +216,7 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 	if(isliving(user))
 		var/mob/living/L = user
 		L.changeNext_move(CLICK_CD_MELEE)
-		user.visible_message("<span class='warning'>[user] presses a hidden button.</span>")
+		user.visible_message(span_warning("[user] presses a hidden button."))
 		user.log_message("pulled the lever with redstone id \"[redstone_id]\"", LOG_GAME)
 		for(var/obj/structure/O in redstone_attached)
 			spawn(0) O.redstone_triggered(user)
@@ -213,14 +225,6 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 
 /obj/structure/lever/hidden/onkick(mob/user) // nice try
 	return FALSE
-
-/obj/structure/lever/wall/attack_hand(mob/user)
-	. = ..()
-	icon_state = "leverwall[toggled]"
-
-/obj/structure/lever/wall/onkick(mob/user)
-	. = ..()
-	icon_state = "leverwall[toggled]"
 
 /obj/structure/pressure_plate //vanderlin port
 	name = "pressure plate"
@@ -241,12 +245,6 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 		to_chat(L, "<span class='info'>I feel something click beneath me.</span>")
 		AM.log_message("has activated a pressure plate", LOG_GAME)
 		playsound(src, 'sound/misc/pressurepad_down.ogg', 35, extrarange = 2)
-
-/obj/structure/pressure_plate/Uncrossed(atom/movable/AM)
-	. = ..()
-	if(!anchored)
-		return
-	if(isliving(AM))
 		triggerplate()
 
 /obj/structure/pressure_plate/proc/triggerplate()
@@ -291,7 +289,7 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 			playsound(user, 'sound/misc/wood_saw.ogg', 100, TRUE)
 		return
 	else if(istype(item, /obj/item/rogueweapon/chisel/assembly))
-		to_chat(user, span_warning("You most use both hands to rename doors."))
+		to_chat(user, span_warning("You most use both hands to rename plates."))
 
 
 /*
@@ -575,7 +573,7 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 		return
 	else
 		var/obj/item/roguekey/K = I
-		if(K.lockhash == lockhash || istype(K, /obj/item/roguekey/lord)) //master key cares not for lockhashes
+		if(K.lockhash == lockhash || istype(K, /obj/item/roguekey/lord) || istype(K, /obj/item/roguekey/skeleton)) //master key cares not for lockhashes
 			lock_toggle(user)
 			return
 		else
@@ -693,10 +691,10 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 	delay2open = 30
 	delay2close = 10
 
-/obj/structure/floordoor/attackby(mob/user)
+/obj/structure/floordoor/attackby(obj/item/I, mob/user, params)
 	. = ..()
-	var/obj/item = user.get_active_held_item()
-	if(user.used_intent.type == /datum/intent/chisel )
+	var/obj/item/held = user.get_active_held_item()
+	if(user.used_intent.type == /datum/intent/chisel)
 		if (user.get_skill_level(/datum/skill/craft/engineering) <= 3)
 			to_chat(user, span_warning("I need more skill to carve a name into this hatch."))
 			return
@@ -713,7 +711,7 @@ GLOBAL_LIST_EMPTY(redstone_objs)
 				desc = "a hatch with a carving scratched out"
 			playsound(user, 'sound/misc/wood_saw.ogg', 100, TRUE)
 		return
-	else if(istype(item, /obj/item/rogueweapon/chisel/assembly))
+	else if(istype(held, /obj/item/rogueweapon/chisel/assembly))
 		to_chat(user, span_warning("You most use both hands to rename the plate."))
 
 /obj/structure/kybraxor

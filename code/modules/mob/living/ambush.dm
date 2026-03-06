@@ -9,10 +9,17 @@ GLOBAL_VAR_INIT(ambush_mobconsider_cooldown, 2 MINUTES) // Cooldown for each ind
 
 /mob/living/proc/consider_ambush(always = FALSE, ignore_cooldown = FALSE, min_dist = 1, max_dist = 7, silent = FALSE)
 	var/area/AR = get_area(src)
-	var/datum/threat_region/TR = SSregionthreat.get_region(AR.threat_region)
-	var/danger_level = DANGER_LEVEL_MODERATE // Fallback if there's no region
+	if(!AR)
+		return FALSE
+
 	if(!AR.ambush_mobs)
 		return FALSE
+
+	var/datum/threat_region/TR = null
+	if(AR.threat_region)
+		TR = SSregionthreat.get_region(AR.threat_region)
+
+	var/danger_level = DANGER_LEVEL_MODERATE // Fallback if there's no region
 	if(TR)
 		danger_level = TR.get_danger_level()
 	if(danger_level == DANGER_LEVEL_SAFE)
@@ -58,7 +65,8 @@ GLOBAL_VAR_INIT(ambush_mobconsider_cooldown, 2 MINUTES) // Cooldown for each ind
 		for(var/mob/living/V in victimsa)
 			V.mob_timers["ambushlast"] = world.time
 		if(TR)
-			TR.reduce_latent_ambush(1) // Remove one ambush from the ambient pool
+			var/scaled_reduction = TR.latent_ambush > DANGER_MODERATE_LIMIT ? 2 : 1 // Dangerous & Dire counts for 2
+			TR.reduce_latent_ambush(scaled_reduction) // Remove one ambush from the ambient pool
 			TR.last_natural_ambush_time = world.time
 		var/list/mobs_to_spawn = list()
 		var/mobs_to_spawn_single = FALSE
@@ -177,7 +185,10 @@ GLOBAL_VAR_INIT(ambush_mobconsider_cooldown, 2 MINUTES) // Cooldown for each ind
 			continue
 		if(isturf(RS.loc) && !get_dist(RS.loc, src) < min_dist)
 			possible_targets += get_adjacent_ambush_turfs(RS.loc)
-
+	// Ambush mobs can spawn in aquatic foliage, so they can still occur on the coast which lacks all other objects.
+	for(var/obj/structure/flora/roguegrass/water/WF in orange(max_dist, src))
+		if(isturf(WF.loc) && !get_dist(WF.loc, src) < min_dist)
+			possible_targets += get_adjacent_ambush_turfs(WF.loc)
 	return possible_targets
 
 /proc/get_adjacent_ambush_turfs(turf/T)

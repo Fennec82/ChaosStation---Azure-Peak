@@ -19,11 +19,8 @@ As of 2018-02-04, the typical z-levels for a single-level station are:
 Multi-Z stations are supported and multi-Z mining and away missions would
 require only minor tweaks.
 */
-
-// helpers for modifying jobs, used in various job_changes.dm files
-#define MAP_JOB_CHECK if(SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) { return; }
-#define MAP_JOB_CHECK_BASE if(SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) { return ..(); }
-#define MAP_REMOVE_JOB(jobpath) /datum/job/##jobpath/map_check() { return (SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) && ..() }
+/// A map key that corresponds to being one exclusively for Space.
+#define SPACE_KEY "space"
 
 #define SPACERUIN_MAP_EDGE_PAD 15
 
@@ -44,6 +41,9 @@ require only minor tweaks.
 // Whether this z level is linked up/down. Bool.
 #define ZTRAIT_UP "Up"
 #define ZTRAIT_DOWN "Down"
+#define ZTRAIT_IGNORE_WEATHER_TRAIT "NoDayorWeather"
+
+#define ZTRAIT_WEATHER_STUFF "Turf Weather Effects"
 
 // enum - how space transitions should affect this level
 #define ZTRAIT_LINKAGE "Linkage"

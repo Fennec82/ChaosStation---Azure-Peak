@@ -13,7 +13,7 @@
 	max_integrity = 20
 	anvilrepair = /datum/skill/craft/blacksmithing
 	tool_behaviour = TOOL_SUTURE
-	experimental_inhand = FALSE
+	experimental_inhand = TRUE
 	/// Amount of uses left
 	var/stringamt = 20
 	var/maxstring = 20
@@ -33,6 +33,14 @@
 			. += span_bold("It has no uses left.")
 	else
 		. += "Can be used indefinitely."
+
+/obj/item/needle/get_mechanics_examine(mob/user)
+	. = ..()
+	. += span_info("Left-click someone - while targeting the desired limb - to begin stitching a wound. Stitching automatically stops once you've completely sealed the specific wound.")
+	. += span_info("While stitching a wound, it will bleed far slower than usual. This effect can be further stacked by applying cloth, bandages, or pressure to the wounded limb.")
+	. += span_info("If multiple stitchable wounds are present on the targeted limb, you'll be given the option to choose which specific wound is treated first.")
+	. += span_info("Needles require fibers to stitch, which can be found by cutting grass or foraging through bushes.")
+	. += span_info("To rethread an emptied needle, left-click it with a strand of fiber.")
 
 /obj/item/needle/Initialize()
 	. = ..()
@@ -105,7 +113,7 @@
 			var/const/SEW_REPAIR_PER_LEVEL = 10
 			/// How many seconds does unskilled sewing take?
 			var/const/BASE_SEW_TIME = 6 SECONDS
-			/// At what (combined) level do we 
+			/// At what (combined) level do we
 			var/const/SKILL_FASTEST_SEW = SKILL_LEVEL_LEGENDARY
 			/// The reduction in sewing time for each (combined) level in sewing/tanning.
 			var/const/SEW_TIME_REDUCTION_PER_LEVEL = 1 SECONDS
@@ -164,12 +172,13 @@
 	if(!istype(user))
 		return FALSE
 	var/mob/living/doctor = user
-	var/mob/living/carbon/human/patient = target
+	var/mob/living/patient = target
 	if(stringamt < 1)
 		to_chat(user, span_warning("The needle has no thread left!"))
 		return
 	var/list/sewable
 	var/obj/item/bodypart/affecting
+	var/is_simple_animal = !iscarbon(patient)
 	if(iscarbon(patient))
 		affecting = patient.get_bodypart(check_zone(doctor.zone_selected))
 		if(!affecting)
@@ -207,16 +216,18 @@
 			break
 		playsound(loc, 'sound/foley/sewflesh.ogg', 100, TRUE, -2)
 		target_wound.sew_progress = min(target_wound.sew_progress + moveup, target_wound.sew_threshold)
-
 		var/bleedreduction = max((0.5 * medskill), 0.5)
 		if(medskill > SKILL_LEVEL_EXPERT)
 			if(medskill == SKILL_LEVEL_MASTER)
 				bleedreduction = 3
 			else if(medskill == SKILL_LEVEL_LEGENDARY)
 				bleedreduction = 4
-		target_wound.bleed_rate = max( (target_wound.bleed_rate - bleedreduction), 0)
+		target_wound.set_bleed_rate(max( (target_wound.bleed_rate - bleedreduction), 0))
 		if(target_wound.bleed_rate == 0 && !informed)
-			patient.visible_message(span_smallgreen("One last drop of blood trickles from the [(target_wound.name)] on [patient]'s [affecting.name] before it closes."), span_smallgreen("The throbbing warmth coming out of [target_wound] soothes and stops. It no longer bleeds."))
+			if(is_simple_animal)
+				patient.visible_message(span_smallgreen("One last drop of blood trickles from the [(target_wound?.name)] on [patient] before it closes."), span_smallgreen("The throbbing warmth coming out of [target_wound] soothes and stops. It no longer bleeds."))
+			else
+				patient.visible_message(span_smallgreen("One last drop of blood trickles from the [(target_wound?.name)] on [patient]'s [affecting.name] before it closes."), span_smallgreen("The throbbing warmth coming out of [target_wound] soothes and stops. It no longer bleeds."))
 			informed = TRUE
 		if(istype(target_wound, /datum/wound/dynamic))
 			var/datum/wound/dynamic/dynwound = target_wound
@@ -231,12 +242,20 @@
 		use(1)
 		target_wound.sew_wound()
 		if(patient == doctor)
-			doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [doctor.p_them()]self."), span_notice("I stitch \a [target_wound.name] on my [affecting]."))
+			if(is_simple_animal)
+				doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [doctor.p_them()]self."), span_notice("I stitch \a [target_wound.name] on myself."))
+			else
+				doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [doctor.p_them()]self."), span_notice("I stitch \a [target_wound.name] on my [affecting]."))
 		else
-			if(affecting)
+			if(is_simple_animal)
+				doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [patient]."), span_notice("I stitch \a [target_wound.name] on [patient]."))
+			else if(affecting)
 				doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [patient]'s [affecting]."), span_notice("I stitch \a [target_wound.name] on [patient]'s [affecting]."))
 			else
 				doctor.visible_message(span_notice("[doctor] sews \a [target_wound.name] on [patient]."), span_notice("I stitch \a [target_wound.name] on [patient]."))
+		if(is_simple_animal)
+			var/mob/living/simple_animal/animal_patient = patient
+			animal_patient.adjustHealth(-((animal_patient.maxHealth / 20) * (medskill + 1)), TRUE)
 		log_combat(doctor, patient, "sew", "needle")
 		return TRUE
 	return FALSE
@@ -249,10 +268,25 @@
 	maxstring = 5
 	anvilrepair = null
 
+/obj/item/needle/thorn/cleric
+	name = "clerical needle"
+	icon_state = "lesserneedle"
+	desc = "This iron-tipped needle can stem the flow of nastier wounds; a blessing, when one is delivered a grave blow while far away from the Church."
+	stringamt = 10
+	maxstring = 10
+	anvilrepair = null
+
 /obj/item/needle/pestra
 	name = "needle of pestra"
 	desc = span_green("This needle has been blessed by the goddess of medicine herself!")
 	infinite = TRUE
+
+/obj/item/needle/bronze
+	name = "bronze needle"
+	icon_state = "bronzeneedle"
+	desc = "A deceptively long needle with a craned tip, laced for labors-a-plenety."
+	stringamt = 30
+	maxstring = 30
 
 /obj/item/needle/aalloy
 	name = "decrepit needle"

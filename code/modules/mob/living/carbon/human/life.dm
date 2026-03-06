@@ -23,14 +23,18 @@
 	var/allmig_reward = 0
 
 /mob/living/carbon/human/Life()
-//	set invisibility = 0
 	if (notransform)
+		return
+
+	if(!client && mode == NPC_AI_SLEEP)
 		return
 
 	. = ..()
 
 	if (QDELETED(src))
 		return 0
+
+	SEND_SIGNAL(src, COMSIG_HUMAN_LIFE)
 
 	if(. && (mode != NPC_AI_OFF))
 		handle_ai()
@@ -40,7 +44,7 @@
 
 	if(mind)
 		mind.sleep_adv.add_stress_cycle(get_stress_amount())
-		for(var/datum/antagonist/A in mind.antag_datums)
+		for(var/datum/antagonist/A as anything in mind.antag_datums)
 			A.on_life(src)
 
 	handle_vamp_dreams()
@@ -51,9 +55,7 @@
 				remove_stress(/datum/stressevent/sleepytime)
 				if(mind)
 					mind.sleep_adv.advance_cycle()
-					allmig_reward++
-					adjust_triumphs(1)
-					to_chat(src, span_danger("Nights Survived: \Roman[allmig_reward]"))
+					handle_sleep_triumphs()
 	if(leprosy == 1)
 		adjustToxLoss(2)
 	else if(leprosy == 2)
@@ -68,11 +70,11 @@
 				leprosy = 3
 	//heart attack stuff
 	handle_heart()
-	handle_liver()
-	update_stamina()
 	update_energy()
-	if(charflaw && !charflaw.ephemeral && mind)
-		charflaw.flaw_on_life(src)
+	update_stamina()
+	for(var/datum/charflaw/cf in charflaws)
+		if(!cf.ephemeral && mind)
+			cf.flaw_on_life(src)
 	if(health <= 0)
 		adjustOxyLoss(0.5)
 	if(mode == NPC_AI_OFF && !client && !HAS_TRAIT(src, TRAIT_NOSLEEP))
@@ -93,9 +95,9 @@
 
 	handle_gas_mask_sound()
 
-	if(mode == NPC_AI_OFF)
-		if(sexcon)
-			sexcon.process_sexcon(1 SECONDS)
+	if(world.time > next_tempo_cull)
+		cull_tempo_list()
+		next_tempo_cull = world.time + TEMPO_CULL_DELAY
 
 	if(stat != DEAD)
 		return 1
@@ -107,7 +109,7 @@
 		return
 
 	if(mind)
-		for(var/datum/antagonist/A in mind.antag_datums)
+		for(var/datum/antagonist/A as anything in mind.antag_datums)
 			A.on_life(src)
 
 	. = ..()
@@ -119,13 +121,6 @@
 			if(gender == MALE)
 				has_stubble = TRUE
 				update_hair()
-
-/mob/living/carbon/human/handle_traits()
-	if (getOrganLoss(ORGAN_SLOT_BRAIN) >= 60)
-		SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "brain_damage", /datum/mood_event/brain_damage)
-	else
-		SEND_SIGNAL(src, COMSIG_CLEAR_MOOD_EVENT, "brain_damage")
-	return ..()
 
 /mob/living/carbon/human/handle_environment()
 
@@ -167,7 +162,6 @@
 /mob/living/carbon/human/SoakMob(locations)
 	. = ..()
 	var/coverhead
-//	var/coverfeet
 	//add belt slots to this for rusting
 	var/list/body_parts = list(head, wear_mask, wear_wrists, wear_shirt, wear_neck, cloak, wear_armor, wear_pants, backr, backl, gloves, shoes, belt, s_store, glasses, ears, wear_ring) //Everything but pockets. Pockets are l_store and r_store. (if pockets were allowed, putting something armored, gloves or hats for example, would double up on the armor)
 	for(var/bp in body_parts)
@@ -177,14 +171,10 @@
 			var/obj/item/clothing/C = bp
 			if(zone2covered(BODY_ZONE_HEAD, C.body_parts_covered))
 				coverhead = TRUE
-//			if(zone2covered(BODY_ZONE_PRECISE_L_FOOT, C.body_parts_covered))
-//				coverfeet = TRUE
 	if(locations & HEAD)
-		if(!coverhead)
+		// An exception for Abyssorites, since otherwise they gain stress in rain when they shouldn't.
+		if(!coverhead && !HAS_TRAIT(src, TRAIT_ABYSSOR_SWIM))
 			add_stress(/datum/stressevent/coldhead)
-//	if(locations & FEET)
-//		if(!coverfeet)
-//			add_stress(/datum/stressevent/coldfeet)
 
 //END FIRE CODE
 
@@ -209,7 +199,7 @@
 					 		'sound/items/confessormask10.ogg')
 			playsound(src, mask_sound, 90, FALSE, 4, 0)
 			return
-			 	
+
 
 
 //This proc returns a number made up of the flags for body parts which you are protected on. (such as HEAD, CHEST, GROIN, etc. See setup.dm for the full list)

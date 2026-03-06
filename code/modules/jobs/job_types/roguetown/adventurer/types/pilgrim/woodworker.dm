@@ -7,7 +7,7 @@
 	outfit = /datum/outfit/job/roguetown/adventurer/woodworker
 	traits_applied = list(TRAIT_HOMESTEAD_EXPERT)
 	cmode_music = 'sound/music/cmode/towner/combat_towner2.ogg'
-	
+
 	category_tags = list(CTAG_PILGRIM, CTAG_TOWNER)
 	subclass_stats = list(
 		STATKEY_STR = 2,
@@ -36,6 +36,7 @@
 		/datum/skill/craft/cooking = SKILL_LEVEL_NOVICE,
 		/datum/skill/misc/reading = SKILL_LEVEL_NOVICE,
 	)
+	maximum_possible_slots = 20 // Should not fill, just a hack to make it shows what types of towners are in round
 
 /datum/outfit/job/roguetown/adventurer/woodworker/pre_equip(mob/living/carbon/human/H)
 	..()
@@ -56,9 +57,11 @@
 						/obj/item/recipe_book/survival = 1,
 						/obj/item/rogueweapon/scabbard/sheath = 1
 						)
-	if(H.pronouns == SHE_HER || H.pronouns == THEY_THEM_F)
+	if(should_wear_femme_clothes(H))
 		armor = /obj/item/clothing/suit/roguetown/shirt/dress/gen
 	else
 		armor = /obj/item/clothing/suit/roguetown/armor/workervest
 		pants = /obj/item/clothing/under/roguetown/trou
 		shirt = /obj/item/clothing/suit/roguetown/shirt/undershirt/random
+	if(H.mind)
+		SStreasury.give_money_account(ECONOMIC_WORKING_CLASS, H, "Savings.")

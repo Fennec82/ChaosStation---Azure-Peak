@@ -1,3 +1,5 @@
+#define ATTACKS_UNTIL_SWITCHING_UP 3 // How many attack a NPC will use on the same place before switching it up
+
 /mob/living/carbon/human
 	var/aggressive=0 //0= retaliate only
 	var/frustration=0
@@ -46,6 +48,64 @@
 	/// When above this amount of stamina (Stamina is stamina damage), the NPC will not attempt to jump.
 	var/npc_max_jump_stamina = 50
 
+	/// Attack Selection
+	var/attack_on_zone = 1
+
+	///What distance should we be checking for interesting things when considering idling/deidling? Defaults to AI_DEFAULT_INTERESTING_DIST
+	var/interesting_dist = AI_DEFAULT_INTERESTING_DIST
+	///our current cell grid
+	var/datum/cell_tracker/our_cells
+
+/mob/living/carbon/human/Initialize()
+	. = ..()
+	our_cells = new(interesting_dist, interesting_dist, 1)
+	set_new_cells()
+
+/mob/living/carbon/human/Destroy()
+	our_cells = null
+	set_npc_target(null)
+	set_pathfinding_target(null)
+	enemies.Cut()
+	return ..()
+
+/mob/living/carbon/human/proc/set_npc_target(mob/living/new_target)
+	if(target == new_target)
+		return
+	var/old_target = target
+	target = new_target
+	update_target_signal(old_target)
+
+/mob/living/carbon/human/proc/set_pathfinding_target(atom/new_target)
+	if(pathfinding_target == new_target)
+		return
+	var/old_target = pathfinding_target
+	pathfinding_target = new_target
+	update_target_signal(old_target)
+
+/// Maintains a single COMSIG_PARENT_QDELETING registration per tracked datum.
+/// Called after target or pathfinding_target changes to update signal registrations.
+/mob/living/carbon/human/proc/update_target_signal(atom/old_target)
+	// Unregister from old target if neither var still references it
+	if(old_target && old_target != target && old_target != pathfinding_target)
+		UnregisterSignal(old_target, COMSIG_PARENT_QDELETING)
+	// Register on target if needed (covers both vars pointing at same datum)
+	if(target)
+		RegisterSignal(target, COMSIG_PARENT_QDELETING, PROC_REF(handle_tracked_target_del), override = TRUE)
+	if(pathfinding_target && pathfinding_target != target)
+		RegisterSignal(pathfinding_target, COMSIG_PARENT_QDELETING, PROC_REF(handle_tracked_target_del), override = TRUE)
+
+/// Single handler for both target and pathfinding_target deletion.
+/mob/living/carbon/human/proc/handle_tracked_target_del(datum/source)
+	SIGNAL_HANDLER
+	if(target == source)
+		target = null
+	if(pathfinding_target == source)
+		pathfinding_target = null
+		clear_path()
+	UnregisterSignal(source, COMSIG_PARENT_QDELETING)
+	if(!target)
+		back_to_idle()
+
 /mob/living/carbon/human/proc/IsStandingStill()
 	return doing || resisting || pickpocketing
 
@@ -72,25 +132,7 @@
 		return TRUE
 	return FALSE
 
-// Check if a player is in range of the AI
-// TODO: Note, we can nuke this once we put complex on spatial grid sleeping
-/mob/living/carbon/human/proc/scan_for_player_in_range(pawn_x, pawn_y, pawn_z)
-	for(var/i = GLOB.player_list.len; i > 0; i--)
-		var/mob/living/M = GLOB.player_list[i]
-		if(!istype(M))
-			continue
-		if(M.z != z) // not the same z sector
-			if(abs(M.y - pawn_y) > 6 || abs(M.x - pawn_x) > 6)
-				continue
-		else if(abs(M.y - pawn_y) > 14 || abs(M.x - pawn_x) > 14)
-			continue
-		return TRUE
-	return FALSE
-
 /mob/living/carbon/human/proc/process_ai()
-	// Prevent expensive pathing if it is in idle mode and there's no players
-	if((mode == NPC_AI_IDLE || mode == NPC_AI_OFF) && !scan_for_player_in_range(x, y, z))
-		return FALSE
 	if(IsDeadOrIncap())
 		walk_to(src,0)
 		return stat == DEAD // only stop processing if we're dead-dead
@@ -272,6 +314,7 @@
 		QDEL_NULL(mmb_intent) // unset our intent after
 		m_intent = old_m_intent
 		if(.)
+			clear_path()
 			start_pathing_to(target) // regenerate path now that we've jumped
 		return
 	m_intent = old_m_intent
@@ -318,40 +361,48 @@
 /mob/living/carbon/human/proc/clear_path()
 	myPath = list()
 	pathing_frustration = 0
-	pathfinding_target = null
+	set_pathfinding_target(null)
 
 /// progress along an existing path or cancel it
 /// returns # of steps taken
 /mob/living/carbon/human/proc/move_along_path()
 	if(!length(myPath))
-		// no path, quit early
 		NPC_THINK("Tried to move along a nonexistent path?!")
 		return 0
 
-	if(get_dist(src, myPath[1]) > 3) // too far away from our current path to continue
-		if(!npc_try_jump()) // try jumping to get back on course
+	if(get_dist(src, myPath[1]) > 3)
+		if(!npc_try_jump())
 			pathing_frustration++
 			NPC_THINK("TOO FAR! Strike [pathing_frustration]!")
 			return 0
-	// var/move_started = world.time
+
 	var/old_pathfinding_target = pathfinding_target
-	var/steps_to_take = maxStepsTick - steps_moved_this_turn // if this isn't our first movement step, limit how many we can take
+	var/steps_to_take = maxStepsTick - steps_moved_this_turn
+
 	for(var/movement_turn in 1 to steps_to_take)
 		if(!length(myPath))
-			NPC_THINK("MOVEMENT TURN [movement_turn]: Path complete!")
+			NPC_THINK("MOVEMENT TURN [movement_turn]: Path empty, stopping.")
 			return
-		// Try jumping prior to validation to avoid losing our path from being too far away.
-		// Basically a catch-up step. Won't run every time.
+
 		if(npc_try_jump())
 			NPC_THINK("MOVEMENT TURN [movement_turn]: Jumped, waiting 1ds!")
-			sleep(1)
+
+			stoplag(1)
+			if(!length(myPath))
+				return
+
 			continue
+
 		if(!validate_path())
 			NPC_THINK("MOVEMENT TURN [movement_turn]: Path invalidated!")
 			return
+		if(!length(myPath))
+			return
+
 		if(pathfinding_target != old_pathfinding_target)
 			NPC_THINK("Changed pathfinding target, ending movement!")
 			return
+
 		// We have a valid path, but our target might be next to us due to movement. Check and bail if so.
 		// Only apply this to movables; if we're going to a specific turf we want to go ONTO it.
 		else if(ismovable(pathfinding_target) && z == pathfinding_target.z && Adjacent(pathfinding_target))
@@ -437,7 +488,7 @@
 	if(!new_target)
 		back_to_idle()
 		return FALSE
-	pathfinding_target = new_target
+	set_pathfinding_target(new_target)
 	var/turf/turf_of_target = get_turf(new_target)
 	if(!turf_of_target)
 		back_to_idle()
@@ -528,7 +579,7 @@
 	if(L.name in friends)
 		return FALSE
 
-	if(enemies[L])
+	if(WEAKREF(L) in enemies)
 		return TRUE
 
 	if(aggressive && !faction_check_mob(L))
@@ -538,10 +589,11 @@
 
 /mob/living/carbon/human/proc/npc_try_backstep()
 	// JUKE: backstep after attacking if you're fast and have movement left
-	var/const/base_juke_chance = 5
+	// Also made base chance 30% instead of 5% as per original
+	var/const/base_juke_chance = 15
 	// for every point of STASPD above 10 you get an extra 5% juke chance
 	var/const/min_spd_for_juke = 10
-	var/const/juke_per_overspd = 5
+	var/const/juke_per_overspd = 5 
 	if(mind?.has_antag_datum(/datum/antagonist/zombie)) // deadites cannot juke
 		return FALSE
 	if(!target)
@@ -559,7 +611,7 @@
 	var/list/newPath = list()
 	var/turf/lastTurf
 	// Use up to half your remaining distance, with a minimum of one tile.
-	var/juke_distance = rand(1, ceil((maxStepsTick - steps_moved_this_turn)/2))
+	var/juke_distance = 1 // Make it single step juke only.
 	for(var/i in 1 to juke_distance)
 		// pick random turfs to juke to until we're out of movement
 		var/list/turf/juke_candidates = get_dodge_destinations(target, lastTurf)
@@ -572,9 +624,9 @@
 	// temporarily force us to use the juke path
 	myPath = newPath
 	var/old_pathfinding_target = pathfinding_target
-	pathfinding_target = myPath[1]
+	set_pathfinding_target(myPath[1])
 	steps_moved_this_turn += move_along_path()
-	pathfinding_target = old_pathfinding_target
+	set_pathfinding_target(old_pathfinding_target)
 	tempfixeye = FALSE
 	if(!fixedeye)
 		nodirchange = FALSE
@@ -681,7 +733,7 @@
 						continue
 					// we assume if we want to hurt them they want to hurt us back
 					if(should_target(bystander))
-						target = bystander // We're trying to run from this person now
+						set_npc_target(bystander) // We're trying to run from this person now
 			if(!target || get_dist(src, target) >= NPC_FLEE_DISTANCE)
 				NPC_THINK("Done fleeing!")
 				back_to_idle()
@@ -705,7 +757,7 @@
 	myPath = list()
 	mode = NPC_AI_IDLE
 	m_intent = MOVE_INTENT_WALK
-	target = null
+	set_npc_target(null)
 	a_intent = INTENT_HELP
 	frustration = 0
 	walk_to(src,0)
@@ -755,18 +807,24 @@
 
 /mob/living/carbon/human/proc/npc_try_make_grab(mob/living/victim)
 	NPC_THINK("Trying to grab [victim]!")
-	swap_hand() // switch to offhand
+	swap_hand()
 	rog_intent_change(3) // grab intent
+
+	used_intent = a_intent
 	npc_choose_grab_zone(victim)
-	UnarmedAttack(victim, TRUE) // instead of start_pulling(victim)
-	var/stam_penalty = used_intent.releasedrain
+	UnarmedAttack(victim, TRUE)
+
+	var/stam_penalty = used_intent?.releasedrain || 0
 	if(istype(rmb_intent, /datum/rmb_intent/strong) || istype(rmb_intent, /datum/rmb_intent/swift))
-		stam_penalty += 4 // as opposed to 10 for a weapon; these are your hands, it's easier to move them
+		stam_penalty += 4
 	stamina_add(stam_penalty)
+
 	if(pulling != victim)
 		aftermiss()
-	rog_intent_change(1) // and back to normal intent to avoid getting stuck on grabs
-	swap_hand() // switch back to mainhand
+
+	rog_intent_change(1)
+	used_intent = null // опционально, чтобы не оставлять мусор
+	swap_hand()
 	return TRUE // end your turn
 
 /// A proc used in monkey_attack. Selects and performs our preferred attack.
@@ -847,6 +905,11 @@
 		npc_choose_attack_zone(victim)
 
 /mob/living/carbon/human/proc/npc_choose_attack_zone(mob/living/victim)
+	if(attack_on_zone <= ATTACKS_UNTIL_SWITCHING_UP)
+		attack_on_zone++
+		return
+	else
+		attack_on_zone = 1
 	// My life for a better way to handle deadite AI.
 	if(mind?.has_antag_datum(/datum/antagonist/zombie))
 		aimheight_change(deadite_get_aimheight(victim))
@@ -891,10 +954,10 @@
 		face_atom(L)
 		if(!target)
 			emote("aggro")
-		target = L
+		set_npc_target(L)
 		if(pathfinding_target != target)
 			clear_path() // Cancel pathfinding so that we can pursue our new enemy.
-		enemies |= L
+		enemies |= WEAKREF(L)
 
 
 /mob/living/carbon/human/attackby(obj/item/W, mob/user, params)
@@ -940,3 +1003,58 @@
 		return TRUE
 	else
 		return FALSE
+
+/mob/living/carbon/human/proc/on_client_enter(datum/source, atom/target)
+	SIGNAL_HANDLER
+	if(mode == NPC_AI_OFF)
+		return
+
+	if(mode == NPC_AI_SLEEP)
+		mode = NPC_AI_IDLE
+
+/mob/living/carbon/human/proc/on_client_exit(datum/source, datum/exited)
+	SIGNAL_HANDLER
+	if(mode == NPC_AI_OFF)
+		return
+
+	consider_wakeup()
+
+/mob/living/carbon/human/proc/set_new_cells()
+	if(QDELETED(src)) // Move to nullspace causes move and causes this.
+		return
+	var/turf/our_turf = get_turf(src)
+	if(isnull(our_turf))
+		return
+
+	var/list/cell_collections = our_cells?.recalculate_cells(our_turf)
+
+	for(var/datum/old_grid as anything in cell_collections[2])
+		UnregisterSignal(old_grid, list(SPATIAL_GRID_CELL_ENTERED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), SPATIAL_GRID_CELL_EXITED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS)))
+
+	for(var/datum/spatial_grid_cell/new_grid as anything in cell_collections[1])
+		RegisterSignal(new_grid, SPATIAL_GRID_CELL_ENTERED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_enter))
+		RegisterSignal(new_grid, SPATIAL_GRID_CELL_EXITED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_exit))
+	consider_wakeup()
+
+/mob/living/carbon/human/proc/update_grid()
+	SIGNAL_HANDLER
+	set_new_cells()
+
+/mob/living/carbon/human/proc/consider_wakeup()
+	if(mode == NPC_AI_OFF)
+		return
+
+	for(var/datum/spatial_grid_cell/grid as anything in our_cells.member_cells)
+		if(length(grid.client_contents))
+			if(mode != NPC_AI_SLEEP && mode != NPC_AI_IDLE)
+				return TRUE
+			mode = NPC_AI_IDLE
+			return TRUE
+
+	mode = NPC_AI_SLEEP
+	return FALSE
+
+/mob/living/carbon/human/Moved()
+	. = ..()
+	if(mode != NPC_AI_OFF)
+		update_grid()

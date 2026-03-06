@@ -6,7 +6,7 @@
 	var/list/pipe_reagents = list()
 	var/seed
 	var/bitesize_mod = 0
-	experimental_inhand = FALSE
+	experimental_inhand = TRUE
 	/// Type of splat to use. If null - produce is unsquashable.
 	var/splat_type = null
 	/// Color of the splat, applied when splat_type is spawned (after squashing).
@@ -18,6 +18,10 @@
 		tastes = list("[name]" = 1)
 	pixel_x = rand(-5, 5)
 	pixel_y = rand(-5, 5)
+
+/obj/item/reagent_containers/food/snacks/grown/examine(mob/user)
+	. = ..()
+	. += span_smallnotice("Smash this with a blunt object to extract seeds from it.")
 
 /obj/item/reagent_containers/food/snacks/grown/attackby(obj/item/weapon, mob/user, params)
 	if(weapon && isturf(loc))
@@ -120,7 +124,10 @@
 /obj/item/reagent_containers/food/snacks/grown/apple
 	seed = /obj/item/seeds/apple
 	name = "apple"
-	desc = ""
+	desc = "Deliciously crisp and fragrant. It's said that archers will sometimes \
+	place these crimson fruits atop another's head, in order to flaunt their accuracy \
+	with a longbow. A successful hit, and the crowd claps without harm; a mote's \
+	deviation, however, and someone's going to end up being hauled into the CHurch."
 	icon_state = "apple"
 	filling_color = "#FF4500"
 	bitesize = 3
@@ -149,7 +156,7 @@
 			bitten_names += H.real_name
 
 /obj/item/reagent_containers/food/snacks/grown/apple/blockproj(mob/living/carbon/human/H)
-	testing("APPLEHITBEGIN")
+
 	if(prob(98))
 		H.visible_message(span_notice("[H] is saved by the apple!"))
 		H.dropItemToGround(H.head)
@@ -163,7 +170,7 @@
 	if(ishuman(M))
 		var/mob/living/carbon/human/H = M
 		if(H.head == src)
-			testing("equipped applz")
+
 			equippedloc = H.loc
 			START_PROCESSING(SSobj, src)
 
@@ -270,6 +277,11 @@
 	var/color_index = "good"
 	rotprocess = SHELFLIFE_SHORT
 
+/obj/item/reagent_containers/food/snacks/grown/berries/rogue/examine(mob/user)
+	. = ..()
+	if(!user.get_client_color(/datum/client_colour/monochrome))
+		. += span_notice("These berries have a <b>[BERRYCOLORS[filling_color]]</b> hue.")
+
 /obj/item/reagent_containers/food/snacks/grown/berries/rogue/Initialize()
 	if(GLOB.berrycolors[color_index])
 		filling_color = GLOB.berrycolors[color_index]
@@ -312,7 +324,7 @@
 
 /obj/item/reagent_containers/food/snacks/grown/nut
 	name = "rocknut"
-	desc = "a nut with mild stimulant properties. In powderized form, it can be used to make a zig."
+	desc = "A nut with mild stimulant properties. In powderized form, it can be used to make a zig."
 	seed = /obj/item/seeds/nut
 	icon_state = "rocknut"
 	tastes = list("nutty" = 1)
@@ -363,7 +375,7 @@
 /*	..................   Sunflower   ................... */
 /obj/item/reagent_containers/food/snacks/grown/sunflower
 	name = "sunflower"
-	desc = "A large, bright yellow flower. Can be worn on the head. Can be roasted directly to make roasted sunflower seeds. Do not attempt to roast its actual seeds."
+	desc = "A large, bright yellow flower. Can be worn on the head."
 	icon_state = "sunflower"
 	mob_overlay_icon = 'icons/roguetown/clothing/onmob/head_items.dmi'
 	seed = /obj/item/seeds/sunflower
@@ -375,8 +387,6 @@
 	list_reagents = list(/datum/reagent/consumable/nutriment = 0)
 	dropshrink = 0.8
 	rotprocess = null
-	cooked_type = /obj/item/reagent_containers/food/snacks/roastseeds // Yeah..
-	fried_type = /obj/item/reagent_containers/food/snacks/roastseeds // Whatever I am not refactoring this yet
 
 //pyroclastic flowers - stonekeep port
 /obj/item/reagent_containers/food/snacks/grown/rogue/fyritius
@@ -407,7 +417,7 @@
 	var/success = FALSE
 	//Logic from funny_attack_effects
 	var/datum/antagonist/werewolf/Were = M.mind.has_antag_datum(/datum/antagonist/werewolf/)
-	var/datum/antagonist/vampirelord/Vamp = M.mind.has_antag_datum(/datum/antagonist/vampirelord/)
+	var/datum/antagonist/vampire/Vamp = M.mind.has_antag_datum(/datum/antagonist/vampire/)
 	if(Were && Were.transformed == TRUE)
 		user.visible_message(span_notice("[user] brings [src] to soak up the ichor of [M]'s wounds."))
 		if(do_after(user, 5 SECONDS, target = M))
@@ -436,9 +446,9 @@
 					success = TRUE
 					IND.fullreset(user)
 				else
-					return	
+					return
 				if(success)
-					changefood(/obj/item/reagent_containers/food/snacks/grown/rogue/fyritius/bloodied, user)		
+					changefood(/obj/item/reagent_containers/food/snacks/grown/rogue/fyritius/bloodied, user)
 
 
 /obj/item/reagent_containers/food/snacks/grown/rogue/fyritius/bloodied
@@ -498,9 +508,9 @@
 /obj/item/reagent_containers/food/snacks/grown/rogue/pipeweeddry/Initialize()
 	. = ..()
 	var/static/list/slapcraft_recipe_list = list(
-		/datum/crafting_recipe/roguetown/survival/sigdry,
-		/datum/crafting_recipe/roguetown/survival/sigdry/cheroot,
-		/datum/crafting_recipe/roguetown/survival/sigsweet/cheroot,
+		/datum/crafting_recipe/roguetown/cooking/sigdry,
+		/datum/crafting_recipe/roguetown/cooking/sigdry/cheroot,
+		/datum/crafting_recipe/roguetown/cooking/sigsweet/cheroot,
 		)
 
 	AddElement(
@@ -522,8 +532,8 @@
 /obj/item/reagent_containers/food/snacks/grown/rogue/swampweeddry/Initialize()
 	. = ..()
 	var/static/list/slapcraft_recipe_list = list(
-		/datum/crafting_recipe/roguetown/survival/sigsweet,
-		/datum/crafting_recipe/roguetown/survival/sigsweet/cheroot,
+		/datum/crafting_recipe/roguetown/cooking/sigsweet,
+		/datum/crafting_recipe/roguetown/cooking/sigsweet/cheroot,
 		)
 
 	AddElement(
@@ -629,6 +639,7 @@
 	cooked_type = /obj/item/reagent_containers/food/snacks/rogue/preserved/carrot_baked
 	tastes = list("carrot" = 1)
 	dropshrink = 0.75
+	seed = /obj/item/seeds/carrot
 
 /*	..................   Cucumber   ................... */
 /obj/item/reagent_containers/food/snacks/grown/cucumber
@@ -648,3 +659,4 @@
 	slices_num = 1
 	slice_path = /obj/item/reagent_containers/food/snacks/rogue/eggplantcarved
 	slice_sound = TRUE
+	seed = /obj/item/seeds/eggplant

@@ -4,6 +4,8 @@
 	desc = "It's scratchy and rustic, but at least it keeps the sun off your head while you toil in the fields."
 	icon_state = "strawhat"
 	sewrepair = TRUE
+	salvage_result = /obj/item/natural/fibers
+	salvage_amount = 2 // Minor materials loss
 
 /obj/item/clothing/head/roguetown/puritan
 	name = "buckled hat"
@@ -15,9 +17,8 @@
 	desc = "A buckled capotain, woven atop a steel skull cap. Discrete enough to wear for a diplomatic affair, but durable enough to thwart a heathen's blade."
 	icon_state = "puritan_hat"
 	sewrepair = FALSE
-	armor = ARMOR_HEAD_HELMET
+	armor = ARMOR_PLATE
 	blocksound = PLATEHIT
-	prevent_crits = list(BCLASS_CUT, BCLASS_STAB, BCLASS_CHOP, BCLASS_BLUNT, BCLASS_TWIST)
 	body_parts_covered = HEAD|HAIR
 	max_integrity = ARMOR_INT_HELMET_STEEL
 	anvilrepair = /datum/skill/craft/armorsmithing
@@ -59,21 +60,25 @@
 	desc = "A comfortable warm hat lined with fur."
 	icon_state = "hatfur"
 	sewrepair = TRUE
+	cold_protection = 5
 
 /obj/item/clothing/head/roguetown/papakha
 	name = "papakha"
 	icon_state = "papakha"
 	item_state = "papakha"
 	sewrepair = TRUE
-	flags_inv = HIDEEARS
-	armor = ARMOR_HEAD_CLOTHING
+	armor = ARMOR_CLOTHING
 	blocksound = SOFTHIT
+	salvage_result = /obj/item/natural/fur
+	salvage_amount = 1
+	cold_protection = 10
 
 /obj/item/clothing/head/roguetown/hatblu
 	name = "fur hat"
 	desc = "A blue hat lined with fur."
 	icon_state = "hatblu"
 	sewrepair = TRUE
+	cold_protection = 5
 
 /obj/item/clothing/head/roguetown/fisherhat
 	name = "straw hat"
@@ -90,6 +95,19 @@
 	item_state = "flathat"
 	sewrepair = TRUE
 
+/obj/item/clothing/head/roguetown/explorerhat
+	name = "explorer's hat"
+	desc = "How many secrets can I uncover this week?"
+	icon_state = "explorerhat"
+	item_state = "explorerhat"
+	sewrepair = TRUE
+
+/obj/item/clothing/head/roguetown/deserthood
+	name = "desert hood"
+	desc = "If only it was this warm."
+	icon_state = "desert_hood"
+	item_state = "desert_hood"
+	sewrepair = TRUE
 
 /obj/item/clothing/head/roguetown/chaperon
 	name = "chaperon hat"
@@ -113,6 +131,12 @@
 	item_state = "chap_alt"
 	color = "#dbcde0"
 
+/obj/item/clothing/head/roguetown/chaperon/greyscale/shepherd
+	name = "mountaineer's chaperon"
+	desc = "A fashionable citygoer's chaperon worn around an insconspicuous iron skullcap. It has a cute little Mamük brooch on the tip of the hood. Szöréndnížine shepherds spend plenty of time in the city and have taken a liking to the chaperon's exaggerated swagger."
+	armor = ARMOR_LEATHER_STUDDED
+	max_integrity = ARMOR_INT_HELMET_IRON - 25
+
 /obj/item/clothing/head/roguetown/chaperon/noble
 	name = "noble's chaperon"
 	desc = "A decorated chaperon worn by the more influential members of society."
@@ -131,6 +155,12 @@
 			pic.color = get_detail_color()
 		add_overlay(pic)
 
+/obj/item/clothing/head/roguetown/chaperon/noble/evil // used for a skeleton loadout
+	name = "dusty scarlet chaperon"
+	desc = "An ancient chaperon, it smells of dust and debris. Is that mold on the inside?"
+	color = CLOTHING_DARK_GREY
+	detail_color = CLOTHING_SCARLET
+
 /obj/item/clothing/head/roguetown/chaperon/noble/bailiff
 	name = "Marshal's chaperon"
 	desc = "A noble's chaperon made for the local Marshal. \"How terribly unfortunate you are!\""
@@ -142,6 +172,12 @@
 	desc = "A noble's chaperon made for the guildmaster."
 	color = "#1b1717ff"
 	detail_color = "#b68e37ff"
+
+/obj/item/clothing/head/roguetown/chaperon/noble/hand
+	name = "hand's chaperon"
+	desc = "A noble's chaperon made for the right hand man. \"Heavy is the head that bears the crown.\""
+	color = CLOTHING_AZURE
+	detail_color = CLOTHING_WHITE
 
 /obj/item/clothing/head/roguetown/chaperon/councillor
 	name = "chaperon hat"
@@ -161,14 +197,13 @@
 	sewrepair = TRUE
 	//dropshrink = 0.75
 
-/obj/item/clothing/head/roguetown/armingcap
+/obj/item/clothing/head/roguetown/cap
 	name = "cap"
-	desc = "A light cap made of leather, usually worn under a helmet."
+	desc = "A light cap made of cloth, usually worn under a helmet."
 	icon_state = "armingcap"
 	item_state = "armingcap"
 	flags_inv = HIDEEARS
 	sewrepair = TRUE
-	salvage_result = /obj/item/natural/hide/cured
 	//dropshrink = 0.75
 
 /obj/item/clothing/head/roguetown/knitcap
@@ -178,7 +213,7 @@
 	sewrepair = TRUE
 	//dropshrink = 0.75
 
-/obj/item/clothing/head/roguetown/armingcap/dwarf
+/obj/item/clothing/head/roguetown/cap/dwarf
 	color = "#cb3434"
 
 /obj/item/clothing/head/roguetown/headband
@@ -196,10 +231,10 @@
 	icon_state = "headband"
 	item_state = "headband"
 	color = "#851a16"
-	armor = ARMOR_HEAD_LEATHER
+	armor = ARMOR_LEATHER_GOOD
 	max_integrity = ARMOR_INT_HELMET_LEATHER
 	body_parts_covered = HEAD|HAIR|EARS
-	prevent_crits = list(BCLASS_CUT, BCLASS_CHOP, BCLASS_TWIST) //Themed to protect against deadites and nitebeasts. Doesn't stop blunt-, smash-, or stabbing crits.
+	prevent_crits = PREVENT_CRITS_MOST
 	sewrepair = TRUE
 	//dropshrink = 0.75
 	dynamic_hair_suffix = null
@@ -219,16 +254,56 @@
 		REMOVE_TRAIT(user, TRAIT_SILVER_BLESSED, TRAIT_GENERIC)
 		REMOVE_TRAIT(user, TRAIT_ZOMBIE_IMMUNE, TRAIT_GENERIC)
 
+/obj/item/clothing/head/roguetown/headband/naledi
+	name = "sojourner's headband"
+	desc = "A traditional garment, carried by those who survived the lonesome pilgrimage through Naledi's cursed dunes. Like a helmet, it will ward off killing blows; but unlike a helmet, it will keep the sweat out of your eyes and the mistakes out of your incantations. </br>'..We had our tests; we had our places of sin and vice. We were to look out for brother and sister, arm-in-arm, to ensure none of us fell. And yet we all did. We all allowed that to become what is. The daemons that roam our streets, that snatch our children from our bed, that eat our wives and break our husbands. They are us, our own creations and perversions. They are humanity as humanity sees itself, made manifest through our own twisted arcyne magicks..'"
+	icon_state = "headband"
+	color = "#48443b"
+	sewrepair = TRUE
+	resistance_flags = FIRE_PROOF
+	armor = ARMOR_SPELLSINGER //Higher-tier protection for pugilist-centric classes. Fits the 'glass cannon' style, and prevents instant death through a glancing headshot on the intended archetype. 
+	blade_dulling = DULLING_BASHCHOP
+	body_parts_covered = HEAD|HAIR|EARS
+	max_integrity = ARMOR_INT_SIDE_STEEL //High leather-tier protection and critical resistances, steel-tier integrity. Integrity boost encourages hand-to-hand parrying. Weaker than the Psydonic Thorns.
+	blocksound = SOFTHIT
+	//dropshrink = 0.75
+	dynamic_hair_suffix = null
+
+/obj/item/clothing/head/roguetown/headband/monk
+	name = "monk's headband"
+	desc = "A winding length of cloth, meticulously lined with heavy leather strips. Errant impacts are thwarted, yet not a degree of vision is impaired; valuable traits, for the Monk who must enlighten their villains with a white-knuckled sermon. </br>'..I kick ass for the Lord!'"
+	icon_state = "headband"
+	color = "#bfb8a9"
+	sewrepair = TRUE
+	resistance_flags = FIRE_PROOF
+	armor = ARMOR_SPELLSINGER //Highest preset protection value for head armor, without leaving people unable to sleep with the headband on. Should be appropriate for the Monk's role.
+	body_parts_covered = HEAD|HAIR|EARS
+	max_integrity = ARMOR_INT_SIDE_STEEL //High leather-tier protection and critical resistances, steel-tier integrity.
+	blocksound = SOFTHIT
+	//dropshrink = 0.75
+	dynamic_hair_suffix = null
+
+/obj/item/clothing/head/roguetown/headband/monk/barbarian
+	name = "hunter's headband"
+	desc = "A winding length of cloth, meticulously lined with heavy leather strips. Errant impacts are thwarted, yet not a degree of vision is impaired; valuable traits, for those who have taken the mantle of confronting monsters with overwhelming strength. </br>'..All it takes for evil to triumph is for good men to do nothing.'"
+	max_integrity = ARMOR_INT_HELMET_LEATHER //Far less durable than the Monk's variant. Remember that the Barbarian retrieves solid weapon skills and armor, even as a pugilist.
 
 /obj/item/clothing/head/roguetown/inqhat
 	name = "inquisitorial hat"
-	desc = "To keep ones vision away from the heavens, and focused on the sin beneath the soil."
+	desc = "A fine leather slouch, beplumed with a crimson feather and fitted with a hidden steel skull cap. It serves as a reminder that the Holy Otavan Inquisition triumphs in one avenue above all else - fashion. </br>'To keep ones vision away from the heavens, and focused on the sin beneath the soil.'"
 	icon_state = "inqhat"
 	item_state = "inqhat"
-	max_integrity = 150
+	max_integrity = 200
+	armor = ARMOR_SPELLSINGER
+	body_parts_covered = HEAD|HAIR|EARS
 	prevent_crits = list(BCLASS_CUT, BCLASS_BLUNT, BCLASS_TWIST)
-	armor = ARMOR_SPELLSINGER // spellsinger hat stats
 	sewrepair = TRUE
+
+/obj/item/clothing/head/roguetown/inqhat/gravehat
+	name = "gravetender's hat"
+	desc = "A fine leather slouch fitted with a hidden steel skull cap. It serves as a reminder that Necra's grasp is never too far."
+	icon_state = "gravehat"
+	item_state = "gravehat"
 
 /obj/item/clothing/head/roguetown/headband/red
 	color = CLOTHING_RED
@@ -284,7 +359,6 @@
 	desc = "A plain leather hat with decorative buckle. Made popular by the ne'er-do-wells of Etrusca."
 	icon_state = "bucklehat"
 	sewrepair = TRUE
-	salvage_result = /obj/item/natural/hide/cured
 
 /obj/item/clothing/head/roguetown/duelhat //lifeweb sprite
 	name = "duelist's hat"
@@ -294,7 +368,6 @@
 	color = COLOR_ALMOST_BLACK	
 	detail_tag = "_detail"
 	detail_color = COLOR_SILVER
-	salvage_result = /obj/item/natural/hide/cured
 
 /obj/item/clothing/head/roguetown/wizhat
 	name = "wizard hat"
@@ -367,11 +440,24 @@
 
 /obj/item/clothing/head/roguetown/witchhat
 	name = "witch hat"
-	desc = ""
+	desc = "Fair is foul, and foul is fair; Hover through the fog and filthy air."
 	icon_state = "witch"
 	item_state = "witch"
+	detail_tag = "_detail"
+	altdetail_tag = "_detailalt"
 	icon = 'icons/roguetown/clothing/head.dmi'
 	sewrepair = TRUE
+	color = CLOTHING_BLACK
+	detail_color = CLOTHING_BROWN
+
+/obj/item/clothing/head/roguetown/witchhat/old
+	name = "decrepit witch hat"
+	desc = "When shall we three meet again; in thunder lightning or in rain."
+	icon_state = "witchold"
+	item_state = "witchold"
+	detail_tag = ""
+	altdetail_tag = ""
+	color = CLOTHING_WHITE
 
 /obj/item/clothing/head/roguetown/archercap
 	name = "archer's cap"
@@ -387,16 +473,20 @@
 /obj/item/clothing/head/roguetown/helmet/tricorn
 	slot_flags = ITEM_SLOT_HEAD
 	name = "tricorn"
-	desc = ""
+	desc = "A triangular hat with its brim turned in on itself. Quite a new-fangled design, but one gaining popularity \
+	among sailors in particular."
 	body_parts_covered = HEAD|HAIR|EARS|NOSE
 	icon_state = "tricorn"
-	armor = ARMOR_HEAD_CLOTHING
+	armor = ARMOR_CLOTHING
 	max_integrity = 100
 	prevent_crits = list(BCLASS_BLUNT, BCLASS_TWIST)
 	anvilrepair = null
 	smeltresult = null
 	sewrepair = TRUE
 	blocksound = SOFTHIT
+	salvage_result = /obj/item/natural/hide/cured
+	salvage_amount = 1
+
 
 /obj/item/clothing/head/roguetown/helmet/tricorn/skull
 	icon_state = "tricorn_skull"
@@ -405,20 +495,23 @@
 /obj/item/clothing/head/roguetown/helmet/tricorn/lucky
 	name = "lucky tricorn"
 	desc = "A weathered tricorn that has seen many skirmishes. You'd feel lucky with this on your head."
-	armor = ARMOR_HEAD_HELMET_BAD
+	armor = ARMOR_LEATHER
 
 /obj/item/clothing/head/roguetown/helmet/bandana
 	slot_flags = ITEM_SLOT_HEAD
 	name = "bandana"
-	desc = ""
+	desc = "A simple triangular length of fabric, typically worn tied around the head as decoration, or to constrict \
+	long hair during intensive work."
 	body_parts_covered = HEAD|HAIR|EARS|NOSE
 	icon_state = "bandana"
-	armor = ARMOR_HEAD_CLOTHING
+	armor = ARMOR_CLOTHING
 	prevent_crits = list(BCLASS_TWIST)
 	anvilrepair = null
 	smeltresult = null
 	sewrepair = TRUE
 	blocksound = SOFTHIT
+	salvage_result = /obj/item/natural/hide/cured
+	salvage_amount = 1
 
 /obj/item/clothing/head/roguetown/veiled
 	name = "nurse's veil"
@@ -431,11 +524,13 @@
 	flags_inv = HIDEHAIR|HIDEFACIALHAIR|HIDEFACE|HIDESNOUT|HIDEEARS
 	flags_cover = HEADCOVERSEYES
 	body_parts_covered = HEAD|HAIR|EARS|NECK|MOUTH|NOSE|EYES
+	slot_flags = ITEM_SLOT_HEAD|ITEM_SLOT_MASK
 	adjustable = CAN_CADJUST
 	toggle_icon_state = TRUE
 	blocksound = SOFTHIT
 	max_integrity = 100
 	sewrepair = TRUE
+	mob_overlay_icon = 'icons/roguetown/clothing/onmob/head_items.dmi'
 
 /obj/item/clothing/head/roguetown/veiled/update_icon()
 	cut_overlays()
@@ -456,3 +551,57 @@
 	icon_state = "loudmouth"
 	item_state = "loudmouth"
 	color = CLOTHING_RED
+
+/obj/item/clothing/head/roguetown/maidhead
+	name = "maid headdress"
+	desc = "A decorative cloth headband clearly indicating the wearer as a maid."
+	icon_state = "maidhead"
+	item_state = "maidhead"
+	icon = 'icons/roguetown/clothing/special/maids.dmi'
+	mob_overlay_icon = 'icons/roguetown/clothing/special/onmob/maids.dmi'
+	sleeved = 'icons/roguetown/clothing/special/onmob/maids.dmi'
+
+/obj/item/clothing/head/roguetown/courtphysician
+	name = "sanguine hat"
+	desc = "A hat for keeping the splattered blood out of your face, for when your trade is required."
+	icon_state = "dochat1"
+	item_state = "dochat1"
+	detail_tag = "_detail"
+	detail_color = CLOTHING_RED
+	icon = 'icons/roguetown/clothing/special/courtphys.dmi'
+	mob_overlay_icon = 'icons/roguetown/clothing/special/onmob/courtphys.dmi'
+	salvage_result = /obj/item/natural/silk
+
+/obj/item/clothing/head/roguetown/courtphysician/Initialize()
+	. = ..()
+	update_icon()
+
+/obj/item/clothing/head/roguetown/courtphysician/update_icon()
+	cut_overlays()
+	if(get_detail_tag())
+		var/mutable_appearance/pic = mutable_appearance(icon(icon, "[icon_state][detail_tag]"))
+		pic.appearance_flags = RESET_COLOR
+		if(get_detail_color())
+			pic.color = get_detail_color()
+		add_overlay(pic)
+
+/obj/item/clothing/head/roguetown/courtphysician/female
+	name = "sanguine cap"
+	desc = "A cap for keeping the splattered blood out of your hair, for when your trade is required."
+	icon_state = "dochat2"
+	item_state = "dochat2"
+	detail_tag = "_detail"
+	detail_color = CLOTHING_RED
+
+/obj/item/clothing/head/roguetown/courtphysician/female/Initialize()
+	. = ..()
+	update_icon()
+
+/obj/item/clothing/head/roguetown/courtphysician/female/update_icon()
+	cut_overlays()
+	if(get_detail_tag())
+		var/mutable_appearance/pic = mutable_appearance(icon(icon, "[icon_state][detail_tag]"))
+		pic.appearance_flags = RESET_COLOR
+		if(get_detail_color())
+			pic.color = get_detail_color()
+		add_overlay(pic)

@@ -2,6 +2,7 @@
 
 /mob/living/simple_animal/hostile/retaliate/rogue/mimic
 	name = "chest"
+	desc = "A wooden chest with a lid held on metal hinges."
 	icon = 'icons/roguetown/mob/monster/mimic.dmi'
 	icon_state = "mimicopen"
 	icon_living = "mimicopen"
@@ -105,7 +106,6 @@
 	// Drop loot onto tile.
 	for(var/obj/O in src)
 		O.forceMove(loc)
-	QDEL_NULL(proximity_monitor)
 	..()
 
 /mob/living/simple_animal/hostile/retaliate/rogue/mimic/get_sound(input)
