@@ -284,7 +284,6 @@
 	sewrepair = TRUE
 	resistance_flags = FIRE_PROOF
 	armor = ARMOR_LEATHER //Higher-tier protection for pugilist-centric classes. Fits the 'glass cannon' style, and prevents instant death through a glancing headshot on the intended archetype. 
-	blade_dulling = DULLING_BASHCHOP
 	body_parts_covered = HEAD|HAIR|EARS
 	max_integrity = ARMOR_INT_SIDE_STEEL //High leather-tier protection and critical resistances, steel-tier integrity. Integrity boost encourages hand-to-hand parrying. Weaker than the Psydonic Thorns.
 	blocksound = SOFTHIT
@@ -472,6 +471,9 @@
 	color = CLOTHING_BLACK
 	detail_color = CLOTHING_BROWN
 
+/obj/item/clothing/head/roguetown/witchhat/mageblue
+	color = CLOTHING_MAGE_BLUE
+
 /obj/item/clothing/head/roguetown/witchhat/old
 	name = "decrepit witch hat"
 	desc = "When shall we three meet again; in thunder lightning or in rain."
@@ -628,7 +630,7 @@
 		add_overlay(pic)
 
 /obj/item/clothing/head/roguetown/maidband
-	name = "maid headband"
+	name = "valorian maid headband"
 	desc = "A pleated cloth headband. It has gained widespread popularity from Valorian nobles travelling with their servants."
 	icon_state = "maidband"
 	body_parts_covered = NONE

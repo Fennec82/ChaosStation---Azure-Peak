@@ -233,6 +233,13 @@
 	force = 18
 	max_integrity = 15
 
+/obj/item/rogueweapon/hammer/paalloy
+	name = "ancient hammer"
+	desc = "A hammer of polished gilbronze. Remade masterfully upon a smooth handle, it shall make forth the armaments of Her legionnaries and great works.."
+	icon_state = "ahammer"
+	force = 21
+	smeltresult = /obj/item/ingot/aaslag
+
 /obj/item/rogueweapon/hammer/aalloy
 	name = "decrepit hammer"
 	desc = "A hammer of wrought bronze. It has pounded out the beginning of a thousand legacies; of humble adventurers, of noble legionnaires, and of foolish heroes."
@@ -302,7 +309,7 @@
 	force = 10
 	possible_item_intents = list(/datum/intent/mace/strike)
 	name = "tongs"
-	desc = "A pair of blacksteel tongs that'll hold onto Psydonia's hottest metal without ever warping. 'Tis a symbol of prestige."
+	desc = "A pair of iron tongs that'll hold onto Psydonia's hottest metal, betwixt a hammering and an anvil's song to forge masterworks of craft."
 	icon_state = "tongs"
 	icon = 'icons/roguetown/weapons/tools.dmi'
 	sharpness = IS_BLUNT
@@ -317,16 +324,25 @@
 	grid_width = 32
 	grid_height = 64
 	is_tool = TRUE
+	var/auto_collect = TRUE
 
 /obj/item/rogueweapon/tongs/get_mechanics_examine(mob/user)
 	. = ..()
 	. += span_info("Left-click an ingot to pick it up. When an ingot is held by the tongs, left-clicking a forge will heat it up. Heated-up ingots can then be placed on an anvil and struck with a hammer to smith various items.")
 	. += span_info("Activate in your hand to drop the picked-up ingot.")
+	. += span_info("Right click to toggle auto collection of multiple ingots from furnaces.")
 
 /obj/item/rogueweapon/tongs/examine(mob/user)
 	. = ..()
 	if(hott)
 		. += span_warning("The tip is hot to the touch.")
+	if(auto_collect)
+		. += span_notice("It is set to auto collect multiple ingots from furnaces.")
+
+/obj/item/rogueweapon/tongs/attack_right(mob/user)
+	auto_collect = !auto_collect
+	to_chat(user, span_notice("The tongs will [auto_collect ? "" : "no longer "]automatically collect from furnaces."))
+	. = ..()
 
 /obj/item/rogueweapon/tongs/get_temperature()
 	if(hott)
@@ -397,6 +413,7 @@
 	force = 5
 	smeltresult = null
 	max_integrity = 15
+	auto_collect = FALSE
 
 /obj/item/rogueweapon/tongs/stone/update_icon()
 	. = ..()
@@ -417,8 +434,26 @@
 	max_integrity = 10
 	color = "#bb9696"
 	sellprice = 5
+	auto_collect = FALSE
 
 /obj/item/rogueweapon/tongs/aalloy/update_icon()
+	. = ..()
+	if(!hingot)
+		icon_state = "atongs"
+	else
+		if(hott)
+			icon_state = "atongsi1"
+		else
+			icon_state = "atongsi0"
+
+/obj/item/rogueweapon/tongs/paalloy
+	name = "ancient tongs"
+	desc = "Wrought bronze pincers the molten alloy, putting it before the anvil and hammer. Soon, it will fashion a new legacy; one unmarred by this dogmatic millenia."
+	icon_state = "atongs"
+	smeltresult = null
+	auto_collect = TRUE
+
+/obj/item/rogueweapon/tongs/paalloy/update_icon()
 	. = ..()
 	if(!hingot)
 		icon_state = "atongs"
@@ -437,6 +472,7 @@
 	icon = 'icons/roguetown/weapons/tools.dmi'
 	force = 14
 	max_integrity = 300
+	auto_collect = TRUE
 
 /obj/item/rogueweapon/tongs/bronze/update_icon()
 	. = ..()
@@ -457,6 +493,7 @@
 	smeltresult = /obj/item/ingot/blacksteel
 	force = 20
 	max_integrity = 450
+	auto_collect = TRUE
 
 /obj/item/rogueweapon/tongs/blacksteel/update_icon()
 	. = ..()

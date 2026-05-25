@@ -2,7 +2,7 @@
 	name = "Mistwalker" //works
 	tutorial = "Hailing from Kazengun you were once a sacred guardian, dedicating your lyfe to protecting your chosen shrine of the twelve against brigands and fiends from beyond alike... now? Your sacred home has fallen, claimed by ruinous forces and you are banished to wander the realm. What will you find in your search for purpose?"
 	allowed_sexes = list(MALE, FEMALE)
-	allowed_races = RACES_NO_CONSTRUCT //i wonder if i will regret letting them be revs
+	forbidden_races = list(RACES_CONSTRUCT) //i wonder if i will regret letting them be revs
 	allowed_patrons = ALL_KAZENGUN_PATRONS //guardian of the twelve... and saidon but no undivided
 	outfit = /datum/outfit/job/roguetown/wretch/mistwalker
 	subclass_languages = list(/datum/language/kazengunese)
@@ -80,7 +80,7 @@
 				H.change_stat(STATKEY_CON, 2)
 			if("Kanabo +1 STR")
 				H.adjust_skillrank_up_to(/datum/skill/combat/maces, SKILL_LEVEL_EXPERT, TRUE)
-				r_hand = /obj/item/rogueweapon/mace/goden/kanabo
+				r_hand = /obj/item/rogueweapon/mace/goden/steel/kanabo
 				backr = /obj/item/rogueweapon/scabbard/gwstrap
 				H.change_stat(STATKEY_STR, 1)
 			if("Naginata +2 PER")
