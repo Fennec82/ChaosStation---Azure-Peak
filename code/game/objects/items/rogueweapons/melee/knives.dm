@@ -402,7 +402,7 @@
 
 /obj/item/rogueweapon/huntingknife/combat/bronze
 	name = "sydearmme"
-	desc = "Wedged bronze and whittled rockwood, handfitted into the dagger's most ancient-of-ancestors. It bares marks of flintknaping along its middlewidth; a customary tradition that's purported to atune its edge to the forces of nature."
+	desc = "Wedged bronze and whittled rockwood, handfitted into the dagger's most ancient-of-ancestors. It bares marks of flintknapping along its middlewidth; a customary tradition that's purported to atune its edge to the forces of nature."
 	icon_state = "bronzedagger"
 	sheathe_icon = "bronzedagger"
 	possible_item_intents = list(/datum/intent/dagger/cut, /datum/intent/dagger/chop/bronze, /datum/intent/dagger/sucker_punch, /datum/intent/dagger/thrust/bronze)
@@ -421,6 +421,39 @@
 	icon = 'icons/roguetown/weapons/daggers32.dmi'
 	max_integrity = 170
 	minstr = 7 //Less strength requirement than the regular combat knife, to reflect the fact that it's a little easier to handle.
+
+/obj/item/rogueweapon/huntingknife/combat/silver
+	name = "silver hunting knife"
+	desc = "A rare descendant of the Grenzelhoftian seax, gifted a silvered edge that is destined to stake the foulest unbeating hearts that Psydonia's yet \
+	to witness. </br>''Come,' he said, 'come, we must see and act. Devils or no devils, or all the devils at once, it matters not; we fight them all the same.'"
+	force = 15
+	icon_state = "silverseax"
+	sheathe_icon = "silverseax"
+	smeltresult = /obj/item/ingot/silver
+	wdefense = 6
+	is_silver = TRUE
+
+/obj/item/rogueweapon/huntingknife/combat/silver/ComponentInitialize()
+	AddComponent(\
+		/datum/component/silverbless,\
+		pre_blessed = BLESSING_NONE,\
+		silver_type = SILVER_TENNITE,\
+		added_force = 0,\
+		added_blade_int = 50,\
+		added_int = 50,\
+		added_def = 2,\
+	)
+
+/obj/item/rogueweapon/huntingknife/combat/silver/preblessed/ComponentInitialize()
+	AddComponent(\
+		/datum/component/silverbless,\
+		pre_blessed = BLESSING_TENNITE,\
+		silver_type = SILVER_TENNITE,\
+		added_force = 0,\
+		added_blade_int = 50,\
+		added_int = 50,\
+		added_def = 2,\
+	)
 
 /datum/intent/dagger/thrust/combat
 	name = "wedged thrust"
@@ -588,6 +621,9 @@
 	. = ..()
 	AddComponent(/datum/component/cursed_item, TRAIT_CABAL, "DAGGER")
 
+/obj/item/rogueweapon/huntingknife/idagger/steel/zizo/get_examine_highlight_status()
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_ALARMING, HERESYDESC_ZIZO_WEAPON)
+
 /obj/item/rogueweapon/huntingknife/idagger/avantyne
 	name = "avantyne-threaded dagger"
 	desc = "An darksteel misericorde, defying rhyme-and-reason in favor of unholy lethality. The jagged edge continuously remorphs itself, \
@@ -599,6 +635,9 @@
 	max_blade_int = 300
 	embedding = list("embedded_pain_multiplier" = 1.2, "embed_chance" = 50, "embedded_fall_chance" = 0) 
 	smeltresult = /obj/item/ingot/avantyne
+
+/obj/item/rogueweapon/huntingknife/idagger/avantyne/get_examine_highlight_status()
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_ALARMING, HERESYDESC_ZIZO_WEAPON)
 
 /obj/item/rogueweapon/huntingknife/idagger/steel/holysee
 	name = "eclipsum dagger"

@@ -105,6 +105,7 @@
 	material_category = ARMOR_MAT_PLATE
 	smeltresult = /obj/item/ingot/aaslag
 	anvilrepair = null
+	max_integrity = ARMOR_INT_HELMET_HEAVY_DECREPIT
 
 /obj/item/clothing/head/roguetown/helmet/kettle/paalloy
 	name = "ancient kettle helmet"
@@ -464,11 +465,27 @@
 
 /obj/item/clothing/head/roguetown/helmet/bascinet/pigface/hounskull
 	name = "hounskull bascinet"
-	desc = "A bascinet with a conical visor, favored by those with snouts and whiskers. Nestle a feather onto the rim to display your allegiance."
+	desc = "A bascinet with a conical visor, favored by those with snouts and whiskers. Nestle a feather or length of cloth onto the rim to display your allegiance."
 	icon_state = "hounskull"
 	item_state = "hounskull"
 
 /obj/item/clothing/head/roguetown/helmet/bascinet/pigface/hounskull/ComponentInitialize()
+	..()
+	AddComponent(/datum/component/adjustable_clothing, (HEAD|EARS|HAIR), (HIDEEARS|HIDEHAIR), null, 'sound/items/visor.ogg', null, UPD_HEAD)	//Standard helmet
+	AddComponent(/datum/component/armour_filtering/negative, TRAIT_HONORBOUND)
+	AddComponent(/datum/component/armour_filtering/negative, TRAIT_FENCERDEXTERITY)
+
+/obj/item/clothing/head/roguetown/helmet/bascinet/pigface/roundface
+	name = "roundface bascinet"
+	desc = "A bascinet with a conical visor, favored by those without snouts and whiskers. Nestle a feather or length of cloth onto the rim to display your allegiance."
+	icon_state = "roundface"
+	item_state = "roundface"
+	worn_x_dimension = 64
+	worn_y_dimension = 64
+	mob_overlay_icon = 'icons/roguetown/clothing/onmob/64x64/head.dmi'
+	bloody_icon = 'icons/effects/blood64.dmi'
+
+/obj/item/clothing/head/roguetown/helmet/bascinet/pigface/roundface/ComponentInitialize()
 	..()
 	AddComponent(/datum/component/adjustable_clothing, (HEAD|EARS|HAIR), (HIDEEARS|HIDEHAIR), null, 'sound/items/visor.ogg', null, UPD_HEAD)	//Standard helmet
 	AddComponent(/datum/component/armour_filtering/negative, TRAIT_HONORBOUND)
