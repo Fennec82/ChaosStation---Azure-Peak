@@ -178,9 +178,7 @@
 				to_chat(user, span_boldnotice("Only town residents can claim this house."))
 				return FALSE
 	if(resident_advclass)
-		if(!human.advjob)
-			return FALSE
-		var/datum/advclass/advclass = SSrole_class_handler.get_advclass_by_name(human.advjob)
+		var/datum/advclass/advclass = human.get_advclass_datum()
 		if(!advclass)
 			return FALSE
 		if(!(advclass.type in resident_advclass))
@@ -258,9 +256,6 @@
 				else
 					addtimer(CALLBACK(src, PROC_REF(Close), FALSE), 25)
 
-
-/obj/structure/mineral_door/attack_paw(mob/user)
-	return attack_hand(user)
 
 /obj/structure/mineral_door/attack_hand(mob/user)
 	. = ..()
@@ -422,7 +417,7 @@
 			playsound(user, 'sound/misc/wood_saw.ogg', 100, TRUE)
 			user.visible_message("<span class='info'>[user] Carves a name into the door.</span>")
 			if(do_after(user, 10))
-				doorname = input("What name would you like to carve into the door?")
+				doorname = sanitize(input("What name would you like to carve into the door?"))
 				if (doorname)
 					name = doorname + "(door)"
 					desc = "a door with a name carved into it"

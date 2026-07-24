@@ -38,7 +38,7 @@
 //Lash = default, can't dismember, so more range and some pen.
 /datum/intent/whip/lash
 	name = "lash"
-	desc = "Lash the whip against a target from afar. </br>Uniquely deals lashing wounds, which inflicts tremendous blood loss and pain onto the target. </br>Critical hits leave permenant scars, unremovable under most circumstances."
+	desc = "Lash the whip against a target from afar. </br>Uniquely deals lashing wounds, which inflicts tremendous blood loss and pain onto the target."
 	blade_class = BCLASS_LASHING
 	attack_verb = list("lashes", "cracks")
 	hitsound = list('sound/combat/hits/blunt/flailhit.ogg')
@@ -85,7 +85,7 @@
 //Punish = Non-lethal sorta damage.
 /datum/intent/whip/punish
 	name = "punish"
-	desc = "Lash the whip against a target from afar. </br>Uniquely deals lashing wounds, which inflicts tremendous pain onto the target. </br>Critical hits leave permenant scars, unremovable under most circumstances."
+	desc = "Lash the whip against a target from afar. </br>Uniquely deals lashing wounds, which inflicts tremendous pain onto the target."
 	blade_class = BCLASS_PUNISH
 	attack_verb = list("lashes", "cracks")
 	hitsound = list('sound/combat/hits/blunt/flailhit.ogg')
@@ -139,6 +139,16 @@
 	minstr = 11
 	possible_item_intents = list(/datum/intent/whip/lash/master, /datum/intent/whip/crack, /datum/intent/whip/punish)
 	smeltresult = /obj/item/ingot/bronze
+
+/obj/item/rogueweapon/whip/blacksteel
+	name = "blacksteel whip"
+	desc = "An elegant whip, corded from besilked leather and tipped with blacksteel. Too refined for torture, too precious for combat; what is one to do with such an enigmatic tool?"
+	icon_state = "bs_whip"
+	force = 23
+	possible_item_intents = list(/datum/intent/whip/lash/master, /datum/intent/whip/crack, /datum/intent/whip/punish)
+	minstr = 9
+	wdefense = 1
+	smeltresult = /obj/item/ingot/blacksteel
 
 /obj/item/rogueweapon/whip/antique/psywhip
 	name = "Daybreak"

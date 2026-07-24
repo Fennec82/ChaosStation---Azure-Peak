@@ -382,6 +382,12 @@
 	triumph_cost = 3
 	sort_category = "Triumphs"
 
+/datum/loadout_item/triumph_armorkit_slimmedsteel
+	name = "Triumph Kit - Slimfitted Steel Armor"
+	path = /obj/item/enchantingkit/triumph_armorkit_slimmedsteel
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
 /datum/loadout_item/triumph_armorkit_drow
 	name = "Triumph Kit - Drowcraft Armor"
 	path = /obj/item/enchantingkit/triumph_armorkit_drow
@@ -556,6 +562,19 @@
 	triumph_cost = 3
 	sort_category = "Triumphs"
 
+/datum/loadout_item/triumph_weaponkit_classicdaggers
+	name = "Triumph Kit - Classic Daggers"
+	path = /obj/item/enchantingkit/triumph_weaponkit_classicdaggers
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
+/datum/loadout_item/triumph_weaponkit_psyswords
+	name = "Triumph Kit - Slimguarded Psydonic Longsword"
+	path = /obj/item/enchantingkit/triumph_weaponkit_psyswords
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
+
 //////////////////
 //  PERFUMES !  //
 //////////////////
@@ -645,8 +664,26 @@
 	triumph_cost = 3
 	sort_category = "Triumphs"
 
+/datum/loadout_item/featherplumestandalone
+	name = "Standalone Decoration, Featherplume"
+	path = /obj/item/clothing/head/roguetown/decoration/featherplume
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
+/datum/loadout_item/crestplumestandalone
+	name = "Standalone Decoration, Crestplume"
+	path = /obj/item/clothing/head/roguetown/decoration/crestplume
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
 /datum/loadout_item/shoulderguardstandalone
 	name = "Standalone Decoration, Shoulderguard"
-	path = /datum/loadout_item/donator/universal/armorpiece_shoulderguard
+	path = /obj/item/clothing/cloak/tabard/stabard/donator_shoulderguard
+	triumph_cost = 3
+	sort_category = "Triumphs"
+
+/datum/loadout_item/orlestandalone
+	name = "Standalone Decoration, Orle"
+	path = /obj/item/clothing/head/roguetown/decoration/orle/donator_dyeable
 	triumph_cost = 3
 	sort_category = "Triumphs"

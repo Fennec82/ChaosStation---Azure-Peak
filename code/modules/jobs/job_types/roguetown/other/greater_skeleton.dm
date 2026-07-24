@@ -49,7 +49,7 @@
 	var/mob/living/carbon/human/H = L
 	H.mob_biotypes |= MOB_UNDEAD
 
-	H.advsetup = TRUE
+	H.set_advsetup(TRUE)
 	H.invisibility = INVISIBILITY_MAXIMUM
 	H.become_blind("advsetup")
 	for (var/obj/item/bodypart/B in H.bodyparts)
@@ -119,7 +119,7 @@ NECRO SKELETONS
 	if(helmchoice != "None")
 		head = helmets[helmchoice]
 	var/tabards = list("Black Jupon", "Black Tabard", "Black Cloak", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/necro
@@ -192,7 +192,7 @@ NECRO SKELETONS
 
 	H.adjust_blindness(-3)
 	var/tabards = list("Black Jupon", "Black Tabard", "Black Cloak", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/necro
@@ -246,7 +246,7 @@ NECRO SKELETONS
 	H.STAINT = 1
 
 	gloves = /obj/item/clothing/gloves/roguetown/plate/iron
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/iron
+	wrists = /obj/item/clothing/wrists/roguetown/bracers/iron/chain
 	pants = /obj/item/clothing/under/roguetown/chainlegs/iron/kilt
 	armor = /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/iron/heavy
 	shirt = prob(50) ? /obj/item/clothing/suit/roguetown/shirt/undershirt/vagrant : /obj/item/clothing/suit/roguetown/shirt/undershirt/vagrant/l
@@ -265,7 +265,7 @@ NECRO SKELETONS
 	if(helmchoice != "None")
 		head = helmets[helmchoice]
 	var/tabards = list("Black Jupon", "Black Tabard", "Black Cloak", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/necro
@@ -353,7 +353,7 @@ NECRO SKELETONS
 	beltl = /obj/item/rogueweapon/pick
 
 	var/tabards = list("Black Jupon", "Black Tabard", "Black Cloak", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/necro

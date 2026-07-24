@@ -109,7 +109,7 @@ LICH SKELETONS
 			beltl = /obj/item/rogueweapon/huntingknife/idagger/steel/padagger
 			backr = /obj/item/rogueweapon/shield/bronze/paalloy
 	var/tabards = list("Black Jupon", "Black Tabard", "Black Cloak + Greathood", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
@@ -205,7 +205,7 @@ LICH SKELETONS
 			H.adjust_skillrank(/datum/skill/combat/shields, 2, TRUE) //Not enough to do shield specials w/knifepick or stabs, go legionnaire for that.
 			backr = /obj/item/rogueweapon/shield/bronze/paalloy // the midground for less damage output w/more defensive value vs ranged in turn. Yes you can use the sling with it.
 	var/tabards = list("Black Cloak + Greathood", "Black Jupon", "Black Tabard", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
@@ -259,7 +259,6 @@ LICH SKELETONS
 	shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy
 	pants = /obj/item/clothing/under/roguetown/chainlegs/kilt/paalloy //Intended as non-plate, stands out from knights this way.
 	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/paalloy
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/paalloy
 	neck = /obj/item/clothing/neck/roguetown/gorget/paalloy
 	shoes = /obj/item/clothing/shoes/roguetown/boots/paalloy
 	gloves = /obj/item/clothing/gloves/roguetown/chain/paalloy
@@ -315,13 +314,15 @@ LICH SKELETONS
 		if("Sayovard + Cuirass & Hauberk")
 			head = /obj/item/clothing/head/roguetown/helmet/heavy/guard/paalloy
 			shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy
+			wrists = /obj/item/clothing/wrists/roguetown/bracers/paalloy
 			armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/paalloy
 		if("Bascinet + Heavy Hauberk")
 			head = /obj/item/clothing/head/roguetown/helmet/heavy/knight/paalloy
+			wrists = /obj/item/clothing/wrists/roguetown/bracers/paalloy/chain
 			shirt = /obj/item/clothing/suit/roguetown/armor/gambeson/light
 			armor = /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/heavy
 	var/tabards = list("Black Tabard", "Black Jupon", "Black Cloak + Greathood", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
@@ -414,7 +415,7 @@ LICH SKELETONS
 
 	H.adjust_blindness(-3)
 	var/tabards = list("Black Cloak", "Black Jupon", "Black Tabard", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	H.set_blindness(0)
 	switch(tabard_choice)
 		if("Black Jupon")
@@ -497,7 +498,7 @@ LICH SKELETONS
 			beltr = /obj/item/rogueweapon/huntingknife/idagger/steel/padagger
 			H.adjust_skillrank(/datum/skill/combat/knives, 1, TRUE)
 	var/tabards = list("Black Cloak + Greathood", "Black Jupon", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
@@ -560,7 +561,7 @@ LICH SKELETONS
 
 	backpack_contents = list(
 		/obj/item/natural/feather = 1, //For your helm
-		/obj/item/storage/belt/rogue/pouch/coins/aalloy = 1 //Hilarious
+		/obj/item/storage/belt/rogue/pouch/coins/aalloy/rich = 1 //Hilarious
 	)
 
 	H.adjust_blindness(-3)
@@ -578,7 +579,7 @@ LICH SKELETONS
 			H.adjust_skillrank(/datum/skill/combat/whipsflails, 1, TRUE)
 			H.adjust_skillrank(/datum/skill/combat/shields, 1, TRUE)
 	var/tabards = list("Black Tabard", "Black Jupon", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
@@ -586,6 +587,10 @@ LICH SKELETONS
 			cloak = /obj/item/clothing/cloak/tabard/lich
 		if("Black Toga")
 			cloak = /obj/item/clothing/cloak/tabard/toga/lich
+
+	if(H.mind) //2 slot, irreplacable skeletons.
+		H.mind.AddSpell(new /datum/action/cooldown/spell/mending) //Gets replaced w/weaker version w/rituos armor, balances out.
+		H.mind.AddSpell(new /datum/action/cooldown/spell/bonemend)
 
 	H.energy = H.max_energy
 
@@ -612,9 +617,10 @@ LICH SKELETONS
 /datum/outfit/job/roguetown/greater_skeleton/lich/spellblade/pre_equip(mob/living/carbon/human/H)
 	..()
 
+	//1:1 almost w/unbound not including statpacks
 	H.STASTR = 9
-	H.STASPD = 8
-	H.STACON = 10 //Nessessary to keep up with wretches (1 slot only)
+	H.STASPD = 9
+	H.STACON = 10
 	H.STAWIL = 12
 	H.STAINT = 14
 	H.STAPER = 12
@@ -639,7 +645,7 @@ LICH SKELETONS
 	shirt = /obj/item/clothing/suit/roguetown/armor/chainmail/paalloy
 	pants = /obj/item/clothing/under/roguetown/chainlegs/kilt/paalloy
 	armor = /obj/item/clothing/suit/roguetown/armor/leather/studded
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/paalloy
+	wrists = /obj/item/clothing/wrists/roguetown/bracers/paalloy/chain
 	neck = /obj/item/clothing/neck/roguetown/chaincoif/paalloy
 	shoes = /obj/item/clothing/shoes/roguetown/sandals/paalloy
 	gloves = /obj/item/clothing/gloves/roguetown/chain/paalloy
@@ -648,7 +654,7 @@ LICH SKELETONS
 
 	backpack_contents = list(
 		/obj/item/natural/feather = 1, //For your helm
-		/obj/item/storage/belt/rogue/pouch/coins/aalloy = 1 //Hilarious
+		/obj/item/storage/belt/rogue/pouch/coins/aalloy/rich = 1 //Hilarious
 	)
 
 
@@ -716,6 +722,7 @@ LICH SKELETONS
 			switch(weapon_choice)
 				if("Ancient Spear")
 					r_hand = /obj/item/rogueweapon/spear/paalloy
+					backr = /obj/item/rogueweapon/scabbard/gwstrap
 				if("Ancient Bardiche")
 					r_hand = /obj/item/rogueweapon/halberd/bardiche/paalloy
 					backr = /obj/item/rogueweapon/scabbard/gwstrap
@@ -731,11 +738,13 @@ LICH SKELETONS
 					beltr = /obj/item/rogueweapon/mace/warhammer/steel/paalloy
 				if("Ancient Grand Mace")
 					r_hand = /obj/item/rogueweapon/mace/goden/steel/paalloy
+					backr = /obj/item/rogueweapon/scabbard/gwstrap
 				if("Ancient Alloy Axe")
 					beltr = /obj/item/rogueweapon/stoneaxe/woodcut/steel/paaxe
 					picked_axe = TRUE
 				if("Steel Greataxe")
 					r_hand = /obj/item/rogueweapon/greataxe/steel
+					backr = /obj/item/rogueweapon/scabbard/gwstrap
 					picked_axe = TRUE
 			if(picked_axe)
 				H.adjust_skillrank_up_to(/datum/skill/combat/axes, 4, TRUE)
@@ -753,7 +762,7 @@ LICH SKELETONS
 		existing_eyes.Insert(H)
 
 	var/tabards = list("Black Tabard", "Black Jupon", "Black Toga")
-	var/tabard_choice = input(H, "Choose your CLOAK.", "BARE YOUR MASTER'S HERALDRY.") as anything in tabards
+	var/tabard_choice = input(H, "Choose your CLOAK.", "BEAR YOUR MASTER'S HERALDRY.") as anything in tabards
 	switch(tabard_choice)
 		if("Black Jupon")
 			cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/lich
