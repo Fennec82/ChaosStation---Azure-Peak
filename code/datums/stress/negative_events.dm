@@ -11,27 +11,27 @@
 /datum/stressevent/peckish
 	timer = 10 MINUTES
 	stressadd = 1
-	desc = span_red("I'm peckish.")
+	desc = span_red("I'm hungry.")
 
 /datum/stressevent/hungry
 	timer = 10 MINUTES
 	stressadd = 3
-	desc = span_red("I'm hungry.")
+	desc = span_red("I'm really hungry!")
 
 /datum/stressevent/starving
 	timer = 10 MINUTES
 	stressadd = 5
-	desc = span_boldred("I'm starving.")
+	desc = span_boldred("I'm starving!")
 
 /datum/stressevent/drym
 	timer = 10 MINUTES
 	stressadd = 1
-	desc = span_red("I'm a little thirsty.")
+	desc = span_red("I'm thirsty.")
 
 /datum/stressevent/thirst
 	timer = 10 MINUTES
 	stressadd = 3
-	desc = span_red("I'm thirsty.")
+	desc = span_red("I really need water!.")
 
 /datum/stressevent/parched
 	timer = 10 MINUTES
