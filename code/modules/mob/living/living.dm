@@ -24,6 +24,7 @@
 	init_faith()
 
 /mob/living/Destroy()
+	cancel_disconnected_admin_alert()
 	surgeries = null
 	if(LAZYLEN(status_effects))
 		for(var/s in status_effects)
@@ -919,8 +920,10 @@
 	if(!mind)
 		return FALSE
 	if(!mind.active)
-		to_chat(user, span_warning("They are unresponsive to my attempts. For now."))
-		return FALSE
+		var/mob/dead/observer/underworld_spirit = get_spirit()
+		if(!(underworld_spirit && underworld_spirit.client))
+			to_chat(user, span_warning("They are unresponsive to my attempts. For now."))
+			return FALSE
 	if(HAS_TRAIT(src, TRAIT_DNR))
 		to_chat(user, span_danger("None of the divine have them. Their only chance is spent. Where did they go?"))
 		return FALSE
@@ -1931,6 +1934,9 @@
 		return
 
 	if(HAS_TRAIT(spread_to, TRAIT_NOFIRE) || HAS_TRAIT(src, TRAIT_NOFIRE))
+		return
+
+	if(HAS_TRAIT(src, TRAIT_NOFIREDECAY))
 		return
 
 	if(!prob(25))
